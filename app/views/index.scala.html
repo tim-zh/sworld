@@ -1,1 +1,27 @@
 @()
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title></title>
+		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+		@*<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">*@
+	</head>
+	<body>
+		<div id="screen"></div>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/melonJS-1.0.2-min.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/debugPanel.js")"></script>
+
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/game.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/resources.js")"></script>
+
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/entities/entities.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/entities/HUD.js")"></script>
+
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/screens/title.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/screens/play.js")"></script>
+
+		<script type="text/javascript">
+			window.onReady(function onReady() {game.onload();}) ;
+		</script>
+	</body>
+</html>
