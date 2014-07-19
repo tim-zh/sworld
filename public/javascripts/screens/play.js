@@ -8,7 +8,7 @@ game.PlayScreen = me.ScreenObject.extend({
 		me.audio.playTrack("DST-InertExponent");
 		
         // load a level
-		me.levelDirector.loadLevel("area01");
+		me.levelDirector.loadLevel("map0");
 		
 		// reset the score
 		game.data.score = 0;
