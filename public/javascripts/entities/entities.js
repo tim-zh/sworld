@@ -1,3 +1,20 @@
+game.Character = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        this.parent(x, y, settings);
+        this.setVelocity(5, 5);
+    },
+
+    setActionController: function(c) {
+        this.controller = c;
+    },
+
+    update: function(dt) {
+        c.updateCharacterPosition(this, dt);
+    }
+});
+
+
+
 /**
  * Player Entity
  */
