@@ -8744,7 +8744,7 @@ window.me = window.me || {};
                 }
             };
             // send the request
-            //xmlhttp.send(null);
+            xmlhttp.send(null);
         }
 
         /**
