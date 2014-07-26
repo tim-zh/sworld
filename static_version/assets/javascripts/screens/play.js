@@ -16,6 +16,10 @@ game.PlayScreen = me.ScreenObject.extend({
 		// add our HUD to the game world
 		this.HUD = new game.HUD.Container();
 		me.game.world.addChild(this.HUD);
+
+        me.game.world.addChild(me.pool.pull("player", 40, 20), 10);
+
+        me.game.viewport.setDeadzone(0, 0);
 	},
 	
 	

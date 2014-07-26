@@ -1,127 +1,41 @@
-game.Character = me.ObjectEntity.extend({
-    init: function(x, y, settings) {
-        this.parent(x, y, settings);
+game.Player = me.ObjectEntity.extend({
+    init: function(x, y) {
+        var name = 'player';
+        var image = me.loader.getImage('gripe_run_right');
+        this.parent(x, y, {name: name, image: image, width: image.height, height: image.height});
         this.setVelocity(5, 5);
-    },
-
-    setActionController: function(c) {
-        this.controller = c;
+        this.gravity = 0;
     },
 
     update: function(dt) {
-        c.updateCharacterPosition(this, dt);
+        var dx = 0;
+        if (me.input.isKeyPressed('left')) {
+            dx = -1;
+            this.flipX(true);
+            //me.audio.play("jump");
+            //this.renderable.flicker(750);
+        }
+        if (me.input.isKeyPressed('right')) {
+            dx = 1;
+            this.flipX(false);
+        }
+        if (dx == 0)
+            this.vel.x = 0;
+        var dy = 0;
+        if (me.input.isKeyPressed('up'))
+            dy = -1;
+        if (me.input.isKeyPressed('down'))
+            dy = 1;
+        if (dy == 0)
+            this.vel.y = 0;
+        this.vel.x += dx * this.accel.x * me.timer.tick;
+        this.vel.y += dy * this.accel.y * me.timer.tick;
+
+        this.updateMovement();
+        me.game.viewport.follow({x: this.pos.x + this.width / 2, y: this.pos.y + this.height / 2});
+
+        return this.vel.x != 0 || this.vel.y != 0;
     }
-});
-
-
-
-/**
- * Player Entity
- */
-game.PlayerEntity = me.ObjectEntity.extend(
-{	
-  
-  /* -----
-
-		constructor
-		
-	  ------			*/
-	
-	init:function (x, y, settings)
-	{
-		// call the constructor
-		this.parent(x, y , settings);
-		
-		// set the default horizontal & vertical speed (accel vector)
-		this.setVelocity(3, 15);
-	 		
-		// set the display to follow our position on both axis
-		me.game.viewport.follow(this.pos, me.game.viewport.AXIS.HORIZONTAL);
-		
-	},
-
-	/* -----
-
-		update the player pos
-		
-	  ------			*/
-	update : function (dt)
-	{
-			
-		if (me.input.isKeyPressed('left'))
-		{
-			// flip the sprite on horizontal axis
-			this.flipX(true);
-			// update the entity velocity
-			this.vel.x -= this.accel.x * me.timer.tick;
-		}
-		else if (me.input.isKeyPressed('right'))
-		{
-			// unflip the sprite
-			this.flipX(false);
-			// update the entity velocity
-			this.vel.x += this.accel.x * me.timer.tick;
-		}
-		else
-		{
-			this.vel.x = 0;
-		}
-		if (me.input.isKeyPressed('jump'))
-		{	
-			if (!this.jumping && !this.falling) 
-			{
-				// set current vel to the maximum defined value
-				// gravity will then do the rest
-				this.vel.y = -this.maxVel.y * me.timer.tick;
-				// set the jumping flag
-				this.jumping = true;
-				// play some audio 
-				me.audio.play("jump");
-			}
-		}
-		
-		// check & update player movement
-		this.updateMovement();
-	 
-		// check for collision
-		var res =  me.game.world.collide(this)
-		 
-		if (res)
-		{
-			if (res.obj.type == me.game.ENEMY_OBJECT)
-			{
-			   if ((res.y>0) && !this.jumping)
-			   {
-				  // bounce (force jump)
-				  this.falling = false;
-				  this.vel.y = -this.maxVel.y * me.timer.tick;
-				  // set the jumping flag
-				  this.jumping = true;
-				  // play some audio
-				  me.audio.play("stomp");
-			   }
-			   else
-			   {
-				  // let's flicker in case we touched an enemy
-				  this.renderable.flicker(750);
-			   }
-			}
-		}
-	 
-				
-		// update animation
-		if (this.vel.x!=0 || this.vel.y!=0)
-		{
-			// update object animation
-			this.parent(dt);
-			return true;
-		}
-		
-		// else inform the engine we did not perform
-		// any update (e.g. position, animation)
-		return false;
-	}
-
 });
 
 /**

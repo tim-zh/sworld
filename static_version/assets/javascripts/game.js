@@ -33,7 +33,7 @@ var game = {
 		}
 
         // Initialize the audio.
-        me.audio.init("mp3,ogg");
+        //me.audio.init("mp3,ogg");
 
         // Set a callback to run when loading is complete.
         me.loader.onload = this.loaded.bind(this);
@@ -60,6 +60,7 @@ var game = {
       
 		// add our player entity in the entity pool
 		me.pool.register("mainPlayer", game.PlayerEntity);
+        me.pool.register("player", game.Player);
 		me.pool.register("CoinEntity", game.CoinEntity);
 		me.pool.register("EnemyEntity", game.EnemyEntity);
       
