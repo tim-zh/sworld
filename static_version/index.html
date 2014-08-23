@@ -14,15 +14,31 @@
     var GameObject = function(game, img, x, y) {
         Phaser.Sprite.call(this, game, x, y, img);
         game.physics.p2.enable(this);
+        this.inputEnabled = true;
         this.smoothed = false;
         this.anchor.set(0.5);
         game.add.existing(this);
     };
     GameObject.prototype = Object.create(Phaser.Sprite.prototype);
     GameObject.prototype.constructor = GameObject;
+    //call in create()
     //f(body)
     GameObject.prototype.addCollisionCallback = function(f) {
         this.body.onBeginContact.add(f, this);
+    };
+    //call in create()
+    //f()
+    GameObject.prototype.addMouseDown = function(f) {
+        this.events.onInputDown.add(f, this);
+    };
+    GameObject.prototype.addMouseOver = function(f) {
+        this.events.onInputOver.add(f, this);
+    };
+    GameObject.prototype.removeMouseDown = function(f) {
+        this.events.onInputDown.remove(f, this);
+    };
+    GameObject.prototype.removeMouseOver = function(f) {
+        this.events.onInputOver.remove(f, this);
     };
 
     var player;
@@ -106,6 +122,9 @@
 
         ship0 = getPlayer(200, 200);
         ship1 = new GameObject(game, 'ship', 240, 200);
+        ship1.addMouseDown(function() {
+            console.log(123)
+        });
         ship1.addCollisionCallback(function(b) {
             console.log(b)
         });
