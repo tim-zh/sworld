@@ -3,135 +3,20 @@
 <head>
     <title></title>
     <script type="text/javascript" src="assets/javascripts/phaser.js"></script>
+    <script type="text/javascript" src="assets/javascripts/states/load.js"></script>
+    <script type="text/javascript" src="assets/javascripts/states/mainMenu.js"></script>
+    <script type="text/javascript" src="assets/javascripts/states/mainGame.js"></script>
+    <script type="text/javascript" src="assets/javascripts/utils.js"></script>
     <link rel="stylesheet" media="screen" href="assets/stylesheets/main.css">
 </head>
 <body>
 <div id="screen"></div>
 <script>
-    var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload: preload, create: create, update: update });
-    var keys;
-
-    var GameObject = function(game, img, x, y) {
-        Phaser.Sprite.call(this, game, x, y, img);
-        game.physics.p2.enable(this);
-        this.inputEnabled = true;
-        this.smoothed = false;
-        this.anchor.set(0.5);
-        game.add.existing(this);
-    };
-    GameObject.prototype = Object.create(Phaser.Sprite.prototype);
-    GameObject.prototype.constructor = GameObject;
-    //call in create()
-    //f(body)
-    GameObject.prototype.addCollisionCallback = function(f) {
-        this.body.onBeginContact.add(f, this);
-    };
-    //call in create()
-    //f()
-    GameObject.prototype.addMouseDown = function(f) {
-        this.events.onInputDown.add(f, this);
-    };
-    GameObject.prototype.addMouseOver = function(f) {
-        this.events.onInputOver.add(f, this);
-    };
-    GameObject.prototype.removeMouseDown = function(f) {
-        this.events.onInputDown.remove(f, this);
-    };
-    GameObject.prototype.removeMouseOver = function(f) {
-        this.events.onInputOver.remove(f, this);
-    };
-
-    var player;
-    var getPlayer = function(x, y) {
-        if (player)
-            return player;
-        player = new GameObject(game, 'ship', x, y);
-        game.camera.follow(player);
-        player.update = function() {
-            if (keys.left.isDown)
-                this.body.rotateLeft(100);
-            else if (keys.right.isDown)
-                this.body.rotateRight(100);
-            else
-                this.body.setZeroRotation();
-
-            if (keys.up.isDown)
-                this.body.thrust(400);
-            else if (keys.down.isDown)
-                this.body.reverse(400);
-        };
-        return player;
-    };
-
-    var rebindKeys = function(up, down, left, right) {
-        for (var i in keys) {
-            game.input.keyboard.removeKeyCapture(keys[i].keyCode);
-            game.input.keyboard.removeKey(keys[i].keyCode);
-        }
-        game.input.keyboard.addKeyCapture([up, down, left, right]);
-        keys = {
-            up: game.input.keyboard.addKey(up),
-            down: game.input.keyboard.addKey(down),
-            left: game.input.keyboard.addKey(left),
-            right: game.input.keyboard.addKey(right)
-        };
-    };
-    var rebindKey = function(key) {
-        game.input.keyboard.removeKeyCapture(key);
-        game.input.keyboard.removeKey(key);
-        game.input.keyboard.addKeyCapture(key);
-        return game.input.keyboard.addKey(key);
-    };
-
-    function preload() {
-        game.load.tilemap('map', 'assets/data/collision_test.json', null, Phaser.Tilemap.TILED_JSON);
-        game.load.image('ground_1x1', 'assets/images/map/ground_1x1.png');
-        game.load.image('walls_1x2', 'assets/images/map/walls_1x2.png');
-        game.load.image('tiles2', 'assets/images/map/tiles2.png');
-        game.load.image('ship', 'assets/images/sprites/thrust_ship2.png');
-    }
-
-    var ship0;
-    var ship1;
-    var map;
-
-    function create() {
-        game.stage.backgroundColor = '#000';
-
-        rebindKeys(Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.LEFT, Phaser.Keyboard.RIGHT);
-
-        game.physics.startSystem(Phaser.Physics.P2JS);
-
-        map = game.add.tilemap('map');
-        map.addTilesetImage('ground_1x1');
-        map.addTilesetImage('walls_1x2');
-        map.addTilesetImage('tiles2');
-        var layer = map.createLayer('Tile Layer 1');
-        map.createLayer('Tile Layer 2');
-        layer.resizeWorld();
-        map.setCollisionBetween(1, 12);
-        game.physics.p2.convertTilemap(map, layer);
-
-        game.physics.p2.setBoundsToWorld(true, true, true, true, false);
-
-        GameObject.prototype.update = function() {
-            var angle = Math.atan2(ship0.body.y - this.body.y, ship0.body.x - this.body.x);
-            this.body.rotation = angle + game.math.degToRad(90);
-            this.body.thrust(400);
-        };
-
-        ship0 = getPlayer(200, 200);
-        ship1 = new GameObject(game, 'ship', 240, 200);
-        ship1.addMouseDown(function() {
-            console.log(123)
-        });
-        ship1.addCollisionCallback(function(b) {
-            console.log(b)
-        });
-    }
-
-    function update() {
-    }
+    var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
+    game.state.add('Load', GameStates.Load);
+    game.state.add('MainMenu', GameStates.MainMenu);
+    game.state.add('MainGame', GameStates.MainGame);
+    game.state.start('Load');
 </script>
 </body>
 </html>
