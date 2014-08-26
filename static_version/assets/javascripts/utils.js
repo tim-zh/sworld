@@ -16,16 +16,16 @@ GameObject.prototype.addCollisionCallback = function(f) {
 //call in create()
 //f()
 GameObject.prototype.addMouseDown = function(f) {
-    this.events.onInputDown.add(f, this);
+    this.onInputDown.add(f, this);
 };
 GameObject.prototype.addMouseOver = function(f) {
-    this.events.onInputOver.add(f, this);
+    this.onInputOver.add(f, this);
 };
 GameObject.prototype.removeMouseDown = function(f) {
-    this.events.onInputDown.remove(f, this);
+    this.onInputDown.remove(f, this);
 };
 GameObject.prototype.removeMouseOver = function(f) {
-    this.events.onInputOver.remove(f, this);
+    this.onInputOver.remove(f, this);
 };
 
 var keys;
