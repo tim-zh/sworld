@@ -19,7 +19,7 @@ GameStates.MainGame.prototype = {
         game.physics.p2.setBoundsToWorld(true, true, true, true, false);
 
         var ship0 = getPlayer(200, 200);
-        var ship1 = new GameObject(game, 'ship', 240, 200);
+        /*var ship1 = new GameObject(game, 'ship', 240, 200);
         ship1.update = function() {
             var angle = Math.atan2(ship0.body.y - this.body.y, ship0.body.x - this.body.x);
             this.body.rotation = angle + game.math.degToRad(90);
@@ -30,6 +30,6 @@ GameStates.MainGame.prototype = {
         });
         ship1.addCollisionCallback(function(b) {
             console.log(b)
-        });
+        });*/
     }
 };

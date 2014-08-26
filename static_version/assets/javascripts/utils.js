@@ -34,20 +34,20 @@ var getPlayer = function(x, y) {
     if (player)
         return player;
     player = new GameObject(game, 'ship', x, y);
-    game.camera.follow(player);
     player.update = function() {
+        this.body.fixedRotation = true;
+        this.body.damping = 0.95;
         if (keys.left.isDown)
-            this.body.rotateLeft(100);
+            this.body.moveLeft(100);
         else if (keys.right.isDown)
-            this.body.rotateRight(100);
-        else
-            this.body.setZeroRotation();
+            this.body.moveRight(100);
 
         if (keys.up.isDown)
-            this.body.thrust(400);
+            this.body.moveUp(100);
         else if (keys.down.isDown)
-            this.body.reverse(400);
+            this.body.moveDown(100);
     };
+    game.camera.follow(player);
     return player;
 };
 
