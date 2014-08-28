@@ -8,11 +8,8 @@ GameStates.MainGame.prototype = {
         game.physics.startSystem(Phaser.Physics.P2JS);
 
         var map = game.add.tilemap('map');
-        map.addTilesetImage('ground_1x1');
-        map.addTilesetImage('walls_1x2');
-        map.addTilesetImage('tiles2');
+        map.addTilesetImage('tiles');
         var layer = map.createLayer('Tile Layer 1');
-        map.createLayer('Tile Layer 2');
         layer.resizeWorld();
         map.setCollisionBetween(1, 12);
         game.physics.p2.convertTilemap(map, layer);
