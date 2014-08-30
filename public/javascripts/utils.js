@@ -3,6 +3,8 @@ var GameObject = function(game, img, x, y) {
     game.physics.p2.enable(this);
     this.inputEnabled = true;
     this.smoothed = false;
+    this.scale.set(4);
+    this.animations.add('left');
     this.anchor.set(0.5);
     game.add.existing(this);
 };
