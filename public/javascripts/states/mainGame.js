@@ -1,7 +1,7 @@
 GameStates.MainGame = function(game) {};
 GameStates.MainGame.prototype = {
     create: function() {
-        game.stage.backgroundColor = '#000';
+        game.stage.backgroundColor = '#333';
 
         rebindKeys(Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.LEFT, Phaser.Keyboard.RIGHT);
 
