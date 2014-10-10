@@ -77,6 +77,9 @@ var getPlayer = function(x, y) {
 			}
 		}
 
+		if (!isMoving)
+			this.body.setZeroVelocity();
+
 		if (!isMoving && this.direction) {
 			this.animations.stop();
 			this.frame = 0;
