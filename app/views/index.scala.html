@@ -1,30 +1,35 @@
 @()
 <!DOCTYPE HTML>
 <html>
-    <head>
-        <title></title>
-        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+	<head>
+		<title></title>
+		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
+		@*<script type="text/javascript" src="@routes.Assets.at("javascripts/phaser.js")"></script>
 
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/phaser.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/load.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainMenu.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainGame.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/utils.js")"></script>*@
 
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/states/load.js")"></script>
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainMenu.js")"></script>
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainGame.js")"></script>
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/utils.js")"></script>
+		@*<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">*@
+	</head>
+	<body>
+		<div id="screen" class="screen"></div>
+		<input type="text" id="text">
+		<input type="button" onclick="sendMessage(document.getElementById('text').value)">
+		@*<script>
+		var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
+		game.state.add('Load', GameStates.Load);
+		game.state.add('MainMenu', GameStates.MainMenu);
+		game.state.add('MainGame', GameStates.MainGame);
+		game.state.start('Load');
 
-        @*<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">*@
-    </head>
-    <body>
-        <div id="screen"></div>
-        <script>
-            var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
-            game.state.add('Load', GameStates.Load);
-            game.state.add('MainMenu', GameStates.MainMenu);
-            game.state.add('MainGame', GameStates.MainGame);
-            game.state.start('Load');
-
-            connect('socket', function(message) {console.log(JSON.parse(message.data))});
-        </script>
-    </body>
+		connect('socket', function(message) {console.log(JSON.parse(message.data))});
+		</script>*@
+	<script>
+		connect('socket', function(message) {document.getElementById("screen").innerHTML += JSON.parse(message.data) + "<br>"});
+	</script>
+	</body>
 </html>
