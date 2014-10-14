@@ -1,0 +1,61 @@
+@(user: Option[User])(content: play.twirl.api.Html)
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" href="@routes.Assets.at("bootstrap/bootstrap.min.css")">
+		<link rel="stylesheet" href="@routes.Assets.at("bootstrap/bootstrap-theme.min.css")">
+		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+		<script src="@routes.Assets.at("jquery/jquery-2.1.1.min.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
+		@*<script type="text/javascript" src="@routes.Assets.at("javascripts/phaser.js")"></script>
+
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/load.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainMenu.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainGame.js")"></script>
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/utils.js")"></script>*@
+
+		@*<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">*@
+	</head>
+	<body>
+		<div class="navbar navbar-inverse">
+			<a class="navbar-brand" href="/">sworld</a>
+			@if(user.isDefined) {
+				<div class="btn-group btn-group-sm navbar-form navbar-right">
+					<div class="btn-group btn-group-sm">
+						<button type="button" class="btn btn-info btn-sm dropdown-toggle" data-toggle="dropdown" tabindex="-1">
+							@user.get.name
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu">
+							<li><a><form method="post" action="/logout">
+								<button type="submit" class="btn btn-link btn-sm">sign out</button>
+							</form></a></li>
+						</ul>
+					</div>
+				</div>
+			} else {
+				<form method="post" action="/auth" class="navbar-form navbar-right">
+					<div class="form-group input-group-sm">
+						<input type="text" placeholder="login" class="form-control" name="name">
+					</div>
+					<div class="form-group input-group-sm">
+						<input type="password" placeholder="password" class="form-control" name="pass">
+					</div>
+					<button type="submit" class="btn btn-default btn-sm" tabindex="-1">sign in</button>
+					<a class="btn-link btn-sm" href="/register">register</a>
+				</form>
+			}
+		</div>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-xs-10">
+				@content
+				</div>
+			</div>
+		</div>
+		<script src="@routes.Assets.at("bootstrap/bootstrap.min.js")"></script>
+	</body>
+</html>

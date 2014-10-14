@@ -1,21 +1,6 @@
-@()
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<title></title>
-		<link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
-		<script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
-		@*<script type="text/javascript" src="@routes.Assets.at("javascripts/phaser.js")"></script>
-
-		<script type="text/javascript" src="@routes.Assets.at("javascripts/serverConversation.js")"></script>
-		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/load.js")"></script>
-		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainMenu.js")"></script>
-		<script type="text/javascript" src="@routes.Assets.at("javascripts/states/mainGame.js")"></script>
-		<script type="text/javascript" src="@routes.Assets.at("javascripts/utils.js")"></script>*@
-
-		@*<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">*@
-	</head>
-	<body>
+@(user: Option[User])
+@wrapper(user) {
+	@if(true) {
 		<div id="screen" class="screen"></div>
 		<input type="text" id="text">
 		<input type="button" onclick="sendMessage(document.getElementById('text').value)">
@@ -28,8 +13,8 @@
 
 		connect('socket', function(message) {console.log(JSON.parse(message.data))});
 		</script>*@
-	<script>
-		connect('socket', function(message) {document.getElementById("screen").innerHTML += JSON.parse(message.data) + "<br>"});
-	</script>
-	</body>
-</html>
+		<script>
+			connect('socket', function(message) {document.getElementById("screen").innerHTML += JSON.parse(message.data) + "<br>"});
+		</script>
+	}
+}
