@@ -1,14 +1,14 @@
 package controllers
 
 import akka.actor._
-import play.api.mvc._
-import play.api.Play.current
-import scala.concurrent.Future
-import play.api.libs.json.JsValue
 import models.User
 import play.api.data.{FormError, Form}
 import play.api.data.Forms._
+import play.api.libs.json.JsValue
+import play.api.mvc._
+import play.api.Play.current
 import play.cache.Cache
+import scala.concurrent.Future
 
 object Application extends Controller {
   def index = Action { implicit req =>

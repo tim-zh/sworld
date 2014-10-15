@@ -1,20 +1,18 @@
 @(user: Option[User])
 @wrapper(user) {
-	@if(true) {
-		<div id="screen" class="screen"></div>
-		<input type="text" id="text">
-		<input type="button" onclick="sendMessage(document.getElementById('text').value)">
-		@*<script>
-		var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
-		game.state.add('Load', GameStates.Load);
-		game.state.add('MainMenu', GameStates.MainMenu);
-		game.state.add('MainGame', GameStates.MainGame);
-		game.state.start('Load');
+    <div id="screen" class="screen"></div>
+    <input type="text" id="text">
+    <input type="button" onclick="sendMessage(document.getElementById('text').value)">
+    @*<script>
+    var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
+    game.state.add('Load', GameStates.Load);
+    game.state.add('MainMenu', GameStates.MainMenu);
+    game.state.add('MainGame', GameStates.MainGame);
+    game.state.start('Load');
 
-		connect('socket', function(message) {console.log(JSON.parse(message.data))});
-		</script>*@
-		<script>
-			connect('socket', function(message) {document.getElementById("screen").innerHTML += JSON.parse(message.data) + "<br>"});
-		</script>
-	}
+    connect('socket', function(message) {console.log(JSON.parse(message.data))});
+    </script>*@
+    <script>
+        connect('socket', function(message) {document.getElementById("screen").innerHTML += JSON.parse(message.data) + "<br>"});
+    </script>
 }
