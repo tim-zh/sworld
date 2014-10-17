@@ -36,7 +36,7 @@ object Application extends Controller {
       registerData => {
         val errors = registerData.validate
         if (errors.isEmpty) {
-          val newUser = new User(registerData.name, registerData.password)
+          val newUser = dao.addUser(registerData.name, registerData.password)
           AuthController.authUser(Some(newUser))
         } else
           Ok(views.html.register(errors, registerData.toMap))

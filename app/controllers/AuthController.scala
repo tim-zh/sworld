@@ -14,7 +14,7 @@ object AuthController extends Controller {
       badForm =>
         Redirect("/"),
       loginData => {
-        val user = if (loginData.name == "q" && loginData.password == "w") Some(new User("q", "w")) else None
+        val user = dao.getUser(loginData.name, loginData.password)
         authUser(user)
       }
     )

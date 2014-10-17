@@ -1,0 +1,30 @@
+@()
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<style>
+			html, body {
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-size: 50px;
+				text-align: center;
+				height: 90%;
+			}
+			div {
+				position: relative;
+				top: 35%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="c"></div>
+		<script>
+			document.getElementById('c').innerHTML = [
+				'Your page is in another castle',
+				'Never gonna give you up<br/>Never gonna let you down<br/>Never gonna run around and desert you',
+				'ಠ_ಠ',
+				'♔<br/>KEEP<br/>CALM<br/>and<br/>CARRY<br/>ON'
+			][Math.floor(Math.random() * 4)]
+		</script>
+	</body>
+</html>

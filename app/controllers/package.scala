@@ -4,6 +4,8 @@ import play.api.mvc.RequestHeader
 import play.cache.Cache
 
 package object controllers {
+  val dao = new models.Dao
+
   def getUserFromSession(implicit req: RequestHeader) = {
     val sessionId = req.session.get("user").getOrElse("-1")
     val user = Cache.get(sessionId)

@@ -1,6 +1,6 @@
-name := """sworld"""
+name := "sworld"
 
-version := "1.0-SNAPSHOT"
+version := "1.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -8,7 +8,8 @@ scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
   jdbc,
-  anorm,
   cache,
-  ws
+  ws,
+  "com.typesafe.slick" %% "slick" % "2.1.0",
+  "com.h2database" % "h2" % "1.4.178"
 )
