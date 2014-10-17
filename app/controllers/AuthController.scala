@@ -40,5 +40,6 @@ object AuthController extends Controller {
     }
   }
 
+
   private case class LoginData(name: String, password: String)
 }

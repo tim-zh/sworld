@@ -3,18 +3,9 @@ package models
 import scala.slick.driver.H2Driver.simple._
 import scala.slick.lifted
 
-case class User(name: String, password: String) extends DataEntity
+case class User(id: Long, version: Long, name: String, password: String)
 
-object User {
-  def get(t: (Long, Long, String, String)): User = {
-    val x = User(t._3, t._4)
-    x.id = t._1
-    x.version = t._2
-    x
-  }
-}
-
-class SlickUser(ltag: lifted.Tag) extends Table[(Long, Long, String, String)](ltag, "users") {
+class SlickUser(lTag: lifted.Tag) extends Table[(Long, Long, String, String)](lTag, "users") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def version = column[Long]("version", O.Default(0))
   def name = column[String]("name")
