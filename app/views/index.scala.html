@@ -2,7 +2,7 @@
 @wrapper(user) {
     <div id="screen" class="screen"></div>
     <input type="text" id="text">
-    <input type="button" onclick="sendMessage(document.getElementById('text').value)">
+    <input type="button" onclick="sendMessage(JSON.stringify(document.getElementById('text').value))">
     @*<script>
     var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
     game.state.add('Load', GameStates.Load);
