@@ -18,7 +18,7 @@ package object controllers {
 
     def validate: Seq[FormError] = {
       var errors = List[FormError]()
-      if (false)
+      if (dao.getUser(name).isDefined)
         errors = FormError("name", "user already exists") :: errors
       if (password != password2)
         errors = FormError("pass2", "password mismatch") :: errors

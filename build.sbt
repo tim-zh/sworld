@@ -11,5 +11,6 @@ libraryDependencies ++= Seq(
   cache,
   ws,
   "com.typesafe.slick" %% "slick" % "2.1.0",
-  "com.h2database" % "h2" % "1.4.178"
+  "com.h2database" % "h2" % "1.4.178",
+  "org.scalatestplus" %% "play" % "1.1.0" % "test"
 )
