@@ -1,4 +1,5 @@
 import controllers.RegisterData
+import models.Dao
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest.mock.MockitoSugar
@@ -11,15 +12,15 @@ import play.api.test.FakeApplication
 class RegisterDataSpec extends PlaySpec with MockitoSugar with OneAppPerSuite {
   implicit override lazy val app: FakeApplication = FakeApplication()
 
-  /*val dao = spy(controllers.dao)
+  val dao = mock[Dao]
 
-  when(dao.getUser(anyString)) thenAnswer new Answer[models.User] {
-    override def answer(invocation: InvocationOnMock) = models.User(0L, 0L, invocation.getArguments()(0).asInstanceOf[String], "")
+  when(dao.getUser(anyString)) thenAnswer new Answer[Option[models.User]] {
+    override def answer(invocation: InvocationOnMock) = Some(models.User(0L, 0L, invocation.getArguments()(0).asInstanceOf[String], ""))
   }
-  when(dao.getUser("c")) thenReturn None*/
+  when(dao.getUser("c")) thenReturn None
 
   val data0 = RegisterData("a", "b", "c")
-  val data1 = RegisterData("b", "c", "c")
+  val data1 = RegisterData("c", "c", "c")
   val data2 = RegisterData("b", "c", "d")
 
   "RegisterData" should {

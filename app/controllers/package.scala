@@ -1,10 +1,10 @@
-import models.User
+import models.{DaoImpl, Dao, User}
 import play.api.data.FormError
 import play.api.mvc.RequestHeader
 import play.cache.Cache
 
 package object controllers {
-  val dao = new models.Dao
+  val dao: Dao = new DaoImpl
 
   def getUserFromSession(implicit req: RequestHeader) = {
     val sessionId = req.session.get("user").getOrElse("-1")
