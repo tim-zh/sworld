@@ -23,11 +23,11 @@ class Dao {
 
 
   def getUser(name: String, password: String): Option[User] =
-    db withDynTransaction { queryGetUserByNamePass(name, password).firstOption map getUser }
+    db withDynTransaction { queryGetUserByNamePass(name, password).firstOption map convertUser }
 
-  def getUser(id: Long): Option[User] = db withDynTransaction { queryGetUserById(id).firstOption map getUser}
+  def getUser(id: Long): Option[User] = db withDynTransaction { queryGetUserById(id).firstOption map convertUser}
 
-  def getUser(name: String): Option[User] = db withDynTransaction { queryGetUserByName(name).firstOption map getUser}
+  def getUser(name: String): Option[User] = db withDynTransaction { queryGetUserByName(name).firstOption map convertUser}
 
   def addUser(name: String, password: String): User = {
     db withDynTransaction {
@@ -41,5 +41,5 @@ class Dao {
   def updateUser(id: Long, password: String): Boolean = db withDynTransaction { queryGetUserFieldsById(id).update(password) == 1}
 
 
-  private def getUser(d: (Long, Long, String, String)) = User(d._1, d._2, d._3, d._4)
+  private def convertUser(d: (Long, Long, String, String)) = User(d._1, d._2, d._3, d._4)
 }

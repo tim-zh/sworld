@@ -1,5 +1,7 @@
+import models.User
+
 package object actors {
-  case class ChatMessage(s: String)
+  case class ChatMessage(user: User, msg: String)
 
   object Subscribe
 }

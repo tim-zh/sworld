@@ -1,14 +1,13 @@
 package controllers
 
+import actors._
 import akka.actor._
-import models.User
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.api.Play.current
 import scala.concurrent.Future
-import actors.{Broadcaster, ClientConversationActor}
 
 object Application extends Controller {
   def index = Action { implicit req =>
@@ -20,7 +19,7 @@ object Application extends Controller {
     val user = getUserFromSession
     Future.successful(
       if (user.isDefined)
-        Right((out: ActorRef) => Props(classOf[ClientConversationActor], out, Broadcaster.instance))
+        Right((out: ActorRef) => Props(classOf[ClientConversationActor], out, Broadcaster.instance, user.get))
       else
         Left(Forbidden)
     )

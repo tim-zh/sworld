@@ -13,6 +13,6 @@
     connect('socket', function(message) {console.log(JSON.parse(message.data))});
     </script>*@
     <script>
-        connect('socket', function(message) {document.getElementById("screen").innerHTML += JSON.parse(message.data) + "<br>"});
+        connect('socket', function(message) {document.getElementById("screen").innerHTML += message.data + "<br>"});
     </script>
 }

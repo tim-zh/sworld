@@ -12,7 +12,7 @@ class Broadcaster extends Actor {
       context watch sender
     case Terminated(actor) =>
       subscriptors -= actor
-    case msg @ ChatMessage(s) =>
+    case msg @ ChatMessage(_, _) =>
       subscriptors foreach(_ ! msg)
   }
 }
