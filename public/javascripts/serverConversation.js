@@ -14,7 +14,7 @@ var setMessageProcessing = function(callback) {
 
 var sendMessage = function(message) {
     if (socket)
-        socket.send(typeof message == 'string' ? message : JSON.stringify(message));
+        socket.send(JSON.stringify(message));
     else
         throw "no socket initialized";
 };

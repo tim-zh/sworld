@@ -7,11 +7,8 @@ import org.scalatestplus.play._
 
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import play.api.test.FakeApplication
 
 class RegisterDataSpec extends PlaySpec with MockitoSugar with OneAppPerSuite {
-  implicit override lazy val app: FakeApplication = FakeApplication()
-
   val dao = mock[Dao]
 
   when(dao.getUser(anyString)) thenAnswer new Answer[Option[models.User]] {

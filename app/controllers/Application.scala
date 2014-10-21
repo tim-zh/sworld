@@ -10,6 +10,9 @@ import play.api.Play.current
 import scala.concurrent.Future
 
 object Application extends Controller {
+  val defaultLocation = Location.create("default")
+  val customLocation = Location.create("custom")
+
   def index = Action { implicit req =>
     val user = getUserFromSession
     Ok(views.html.index(user))
@@ -19,7 +22,7 @@ object Application extends Controller {
     val user = getUserFromSession
     Future.successful(
       if (user.isDefined)
-        Right((out: ActorRef) => Props(classOf[ClientConversationActor], out, Broadcaster.instance, user.get))
+        Right((out: ActorRef) => Props(classOf[ClientConversationActor], out, defaultLocation, user.get))
       else
         Left(Forbidden)
     )
