@@ -18,7 +18,7 @@ object Application extends Controller {
     Ok(views.html.index(user))
   }
 
-  def socket = WebSocket.tryAcceptWithActor[JsValue, String] { implicit request =>
+  def socket = WebSocket.tryAcceptWithActor[JsValue, JsValue] { implicit request =>
     val user = getUserFromSession
     Future.successful(
       if (user.isDefined)
