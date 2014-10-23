@@ -6,7 +6,7 @@ import play.cache.Cache
 package object controllers {
   val dao: Dao = new DaoImpl
 
-  def getUserFromSession(implicit req: RequestHeader) = {
+  def getUserFromSession(implicit req: RequestHeader): Option[User] = {
     val sessionId = req.session.get("user").getOrElse("-1")
     val user = Cache.get(sessionId)
     if (user == null) None else Some(user.asInstanceOf[User])
@@ -14,7 +14,7 @@ package object controllers {
 
   case class RegisterData(name: String, password: String, password2: String) {
     def this(badData: Map[String, String]) =
-      this(badData.get("name").getOrElse(""), badData.get("pass").getOrElse(""), badData.get("pass2").getOrElse(""))
+      this(badData.getOrElse("name", ""), badData.getOrElse("pass", ""), badData.getOrElse("pass2", ""))
 
     def validate: Seq[FormError] = {
       var errors = List[FormError]()

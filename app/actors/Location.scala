@@ -1,6 +1,6 @@
 package actors
 
-import akka.actor.{Props, Terminated, ActorRef, Actor}
+import akka.actor.{Actor, ActorRef, Props, Terminated}
 import play.libs.Akka
 
 class Location extends Actor {
@@ -10,13 +10,18 @@ class Location extends Actor {
     case EnterLocation =>
       population += sender
       context watch sender
-      sender ! true
+      sender ! ConfirmEnterLocation
     case LeaveLocation =>
       population -= sender
     case Terminated(actor) =>
       population -= actor
-    case msg @ ChatMessage(_, _) =>
+    case msg @ ChatMessage(_, _) if population contains sender =>
       population foreach(_ ! msg)
+    case Move(x, y) if population contains sender =>
+      if (0 <= x && x <= 100 && 0 <= y && y <= 100)
+        sender ! ConfirmMove(x, y)
+      else
+        sender ! (0, 0)
   }
 }
 

@@ -1,35 +1,30 @@
 package actors
 
 import akka.actor._
-import akka.pattern.ask
-import akka.util.Timeout
 import models.User
-import play.api.libs.json.{JsBoolean, Json, JsValue}
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.json.{JsBoolean, JsObject, JsValue, Json}
 
 class ClientConversationActor(out: ActorRef, var location: ActorRef, owner: User) extends Actor {
-  implicit val timeout = Timeout(2 seconds)
-
   override def preStart() {
     location ! EnterLocation
   }
 
   def receive = {
+    case jsObj: JsObject if jsObj.value contains "newLocation" =>
+      val path = "/user/" + (jsObj \ "newLocation").as[String]
+      context.actorSelection(path) ! EnterLocation
+    case ConfirmEnterLocation if location != sender =>
+      location ! LeaveLocation
+      location = sender
+      out ! Json.obj("newLocation" -> sender.path.name)
+    case jsObj: JsObject if jsObj.value contains "move" =>
+      val newX = (jsObj \ "move" \ "x").as[Double]
+      val newY = (jsObj \ "move" \ "y").as[Double]
+      location ! Move(newX, newY)
+    case ConfirmMove(x, y) =>
+      out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
     case msg: JsValue =>
-      (msg \ "newLocation").asOpt[String] match {
-        case Some(x) =>
-          val path = "/user/" + x
-          (context.actorSelection(path) ? EnterLocation) map {
-            case true =>
-              location ! LeaveLocation
-              location = sender
-              out ! Json.obj("newLocation" -> path)
-            case _ =>
-          }
-        case None =>
-          location ! ChatMessage(owner, (msg \ "text").as[String])
-      }
+      location ! ChatMessage(owner, (msg \ "text").as[String])
     case ChatMessage(user, msg) if sender == location =>
       var message = Json.obj("text" -> msg, "user" -> user.name)
       if (user.id == owner.id)
