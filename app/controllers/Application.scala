@@ -10,8 +10,8 @@ import play.api.Play.current
 import scala.concurrent.Future
 
 object Application extends Controller {
-  val defaultLocation = Location.create("default")
-  val customLocation = Location.create("custom")
+  val defaultLocation = Location.create("default", dao)
+  val customLocation = Location.create("custom", dao)
 
   def index = Action { implicit req =>
     val user = getUserFromSession
@@ -38,7 +38,7 @@ object Application extends Controller {
       registerData => {
         val errors = registerData.validate
         if (errors.isEmpty) {
-          val newUser = dao.addUser(registerData.name, registerData.password)
+          val newUser = dao.addUser(registerData.name, registerData.password, "default", 1, 1)
           AuthController.authUser(Some(newUser))
         } else
           Ok(views.html.register(errors, registerData.toMap))

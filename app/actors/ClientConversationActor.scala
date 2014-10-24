@@ -7,24 +7,32 @@ import play.api.libs.json.{JsBoolean, JsObject, JsValue, Json}
 class ClientConversationActor(out: ActorRef, var location: ActorRef, owner: User) extends Actor {
   override def preStart() {
     location ! EnterLocation
+    out ! Json.obj("move" -> Json.obj("x" -> owner.position.x, "y" -> owner.position.y))
   }
 
   def receive = {
     case jsObj: JsObject if jsObj.value contains "newLocation" =>
       val path = "/user/" + (jsObj \ "newLocation").as[String]
       context.actorSelection(path) ! EnterLocation
+
     case ConfirmEnterLocation if location != sender =>
       location ! LeaveLocation
       location = sender
-      out ! Json.obj("newLocation" -> sender.path.name)
+      out ! Json.obj("newLocation" -> sender.path.name, "move" -> Json.obj("x" -> owner.position.x, "y" -> owner.position.y))
+
     case jsObj: JsObject if jsObj.value contains "move" =>
       val newX = (jsObj \ "move" \ "x").as[Double]
       val newY = (jsObj \ "move" \ "y").as[Double]
-      location ! Move(newX, newY)
+      location ! Move(owner, newX, newY)
+
     case ConfirmMove(x, y) =>
+      owner.position.x = x
+      owner.position.y = y
       out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
+
     case msg: JsValue =>
       location ! ChatMessage(owner, (msg \ "text").as[String])
+
     case ChatMessage(user, msg) if sender == location =>
       var message = Json.obj("text" -> msg, "user" -> user.name)
       if (user.id == owner.id)

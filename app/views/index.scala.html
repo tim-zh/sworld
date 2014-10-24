@@ -3,11 +3,11 @@
   <div id="screen" class="screen"></div>
   <input type="text" id="text">
   <input type="button" id="sendButton" value="send">
-	<input type="button" id="upButton" value="up">
-	<input type="button" id="downButton" value="down">
-	<input type="button" id="leftButton" value="left">
-	<input type="button" id="rightButton" value="right">
-	@*<script>
+  <input type="button" id="upButton" value="up">
+  <input type="button" id="downButton" value="down">
+  <input type="button" id="leftButton" value="left">
+  <input type="button" id="rightButton" value="right">
+  @*<script>
   var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
   game.state.add('Load', GameStates.Load);
   game.state.add('MainMenu', GameStates.MainMenu);
@@ -29,46 +29,46 @@
     };
     document.getElementById("sendButton").onclick = send;
     document.getElementById("text").onkeydown = function(event) {
-	    if (event.keyCode == 13)
-		    send();
+      if (event.keyCode == 13)
+        send();
     };
-	  var x = 1;
-	  var y = 1;
+    var x = 1;
+    var y = 1;
     var move = function(direction) {
-		  switch (direction) {
-		    case "up":
-			    y -= 1;
-			    break;
-			  case "down":
-				  y += 1;
-				  break;
-			  case "left":
-				  x -= 1;
-				  break;
-			  case "right":
-				  x += 1;
-				  break;
-		  }
-	    sendMessage({ move: { x: x, y: y } });
+      switch (direction) {
+        case "up":
+          y -= 1;
+          break;
+        case "down":
+          y += 1;
+          break;
+        case "left":
+          x -= 1;
+          break;
+        case "right":
+          x += 1;
+          break;
+      }
+      sendMessage({ move: { x: x, y: y } });
     };
     document.getElementById("upButton").onclick = function() { move("up") };
     document.getElementById("downButton").onclick = function() { move("down") };
     document.getElementById("leftButton").onclick = function() { move("left") };
     document.getElementById("rightButton").onclick = function() { move("right") };
     var receive = function(message) {
-	    var msg = JSON.parse(message.data);
-	    if (msg.newLocation) {
-		    document.title = msg.newLocation;
-		    return;
-	    }
-	    if (msg.move) {
-		    x = msg.move.x;
-	      y = msg.move.y;
-	      document.getElementById("screen").innerHTML += "moved to x: " + x + " y: " + y + "<br/>";
-		    return;
-	    }
-	    var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
-	    entry += ": " + msg.text + "<br>";
+      var msg = JSON.parse(message.data);
+      if (msg.newLocation) {
+        document.title = msg.newLocation;
+        return;
+      }
+      if (msg.move) {
+        x = msg.move.x;
+        y = msg.move.y;
+        document.getElementById("screen").innerHTML += "moved to x: " + x + " y: " + y + "<br/>";
+        return;
+      }
+      var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
+      entry += ": " + msg.text + "<br>";
       document.getElementById("screen").innerHTML += entry;
     };
     connect('socket', receive);

@@ -12,7 +12,7 @@ package object actors {
 
   object LeaveLocation
 
-  case class Move(x: Double, y: Double)
+  case class Move(user: User, x: Double, y: Double)
 
   case class ConfirmMove(x: Double, y: Double)
 

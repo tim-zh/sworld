@@ -15,8 +15,11 @@ class DaoImpl extends Dao {
   private val queryGetUserById = Compiled((id: Column[Long]) =>
     users.filter(_.id === id))
 
-  private val queryGetUserFieldsById = Compiled((id: Column[Long]) =>
+  private val queryGetUserPasswordById = Compiled((id: Column[Long]) =>
     (for (user <- users if user.id === id) yield user).map(_.password))
+
+  private val queryGetUserPositionById = Compiled((id: Column[Long]) =>
+    (for (user <- users if user.id === id) yield user).map(user => (user.location, user.x, user.y)))
 
   private val queryGetUserByName = Compiled((name: Column[String]) =>
     users.filter(_.name === name))
@@ -29,17 +32,21 @@ class DaoImpl extends Dao {
 
   def getUser(name: String): Option[User] = db withDynTransaction { queryGetUserByName(name).firstOption map convertUser}
 
-  def addUser(name: String, password: String): User = {
+  def addUser(name: String, password: String, location: String, x: Double, y: Double): User = {
     db withDynTransaction {
-      val id = (users.map(x => (x.name, x.password)) returning users.map(_.id)) += (name, password)
-      User(id, 0, name, password)
+      val id = (users.map(x => (x.name, x.password, x.location, x.x, x.y)) returning users.map(_.id)) += (name, password, location, x, y)
+      User(id, 0, name, password, Position(location, x, y))
     }
   }
 
   def deleteUser(id: Long): Boolean = db withDynTransaction { queryGetUserById(id).delete == 1}
 
-  def updateUser(id: Long, password: String): Boolean = db withDynTransaction { queryGetUserFieldsById(id).update(password) == 1}
+  def updateUserPassword(id: Long, password: String): Boolean = db withDynTransaction { queryGetUserPasswordById(id).update(password) == 1}
+
+  def updateUserPosition(id: Long, location: String, x: Double, y: Double): Boolean = db withDynTransaction {
+    queryGetUserPositionById(id).update(location, x, y) == 1
+  }
 
 
-  private def convertUser(d: (Long, Long, String, String)) = User(d._1, d._2, d._3, d._4)
+  private def convertUser(d: (Long, Long, String, String, String, Double, Double)) = User(d._1, d._2, d._3, d._4, Position(d._5, d._6, d._7))
 }
