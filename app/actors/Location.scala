@@ -1,35 +1,42 @@
 package actors
 
 import akka.actor.{Actor, ActorRef, Props, Terminated}
-import models.Dao
+import models.{User, Dao}
 import play.libs.Akka
 
 class Location(dao: Dao) extends Actor {
-  private var population = Set[ActorRef]()
+  private var actorsMap = Map[ActorRef, User]()
+  private var usersMap = Map[User, ActorRef]()
 
   def receive = {
-    case EnterLocation =>
-      population += sender
+    case EnterLocation(user) =>
+      actorsMap += (sender -> user)
+      usersMap += (user -> sender)
       context watch sender
       sender ! ConfirmEnterLocation
 
     case LeaveLocation =>
-      population -= sender
+      usersMap -= actorsMap.getOrElse(sender, null)
+      actorsMap -= sender
 
     case Terminated(actor) =>
-      population -= actor
+      usersMap -= actorsMap.getOrElse(sender, null)
+      actorsMap -= actor
 
-    case msg @ ChatMessage(_, _) if population contains sender =>
-      population foreach(_ ! msg)
+    case msg @ ChatMessage(_, _) if actorsMap contains sender =>
+      actorsMap foreach(_._1 ! msg)
 
-    case Move(user, x, y) if population contains sender =>
+    case msg @ Say(_, _) if actorsMap contains sender =>
+      val user = actorsMap(sender)
+      filterNearbyUsers(user, usersMap.keySet toSeq, 4) map(usersMap(_) ! msg)
+
+    case Move(user, x, y) if actorsMap contains sender =>
       if (0 <= x && x <= 100 && 0 <= y && y <= 100 &&
           Math.abs(user.position.x - x) <= 1 && Math.abs(user.position.y - y) <= 1) {
         dao.updateUserPosition(user.id, user.position.location, x, y)
         sender ! ConfirmMove(x, y)
-      }
-      else
-        sender ! (1, 1)
+      } else
+        sender ! ConfirmMove(1, 1)
   }
 }
 

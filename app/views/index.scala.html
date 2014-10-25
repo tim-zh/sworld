@@ -2,7 +2,8 @@
 @wrapper(user) {
   <div id="screen" class="screen"></div>
   <input type="text" id="text">
-  <input type="button" id="sendButton" value="send">
+  <input type="button" id="sayButton" value="say">
+  <input type="button" id="chatButton" value="chat">
   <input type="button" id="upButton" value="up">
   <input type="button" id="downButton" value="down">
   <input type="button" id="leftButton" value="left">
@@ -17,20 +18,27 @@
   connect('socket', function(message) {console.log(JSON.parse(message.data))});
   </script>*@
   <script>
-    var send = function() {
+    var el = function(id) { return document.getElementById(id) };
+    var chat = function() {
       var message = {};
-      var text = document.getElementById('text').value;
+      var text = el('text').value;
       if (text.charAt(0) == '!')
         message.newLocation = text.substring(1);
       else
-        message.text = text;
+        message.chat = text;
       sendMessage(message);
-      document.getElementById('text').value = "";
+      el('text').value = "";
     };
-    document.getElementById("sendButton").onclick = send;
-    document.getElementById("text").onkeydown = function(event) {
+    el("chatButton").onclick = chat;
+    var say = function() {
+      var text = el('text').value;
+      sendMessage({ say: text });
+      el('text').value = "";
+    };
+    el("sayButton").onclick = say;
+    el("text").onkeydown = function(event) {
       if (event.keyCode == 13)
-        send();
+        say();
     };
     var x = 1;
     var y = 1;
@@ -51,10 +59,10 @@
       }
       sendMessage({ move: { x: x, y: y } });
     };
-    document.getElementById("upButton").onclick = function() { move("up") };
-    document.getElementById("downButton").onclick = function() { move("down") };
-    document.getElementById("leftButton").onclick = function() { move("left") };
-    document.getElementById("rightButton").onclick = function() { move("right") };
+    el("upButton").onclick = function() { move("up") };
+    el("downButton").onclick = function() { move("down") };
+    el("leftButton").onclick = function() { move("left") };
+    el("rightButton").onclick = function() { move("right") };
     var receive = function(message) {
       var msg = JSON.parse(message.data);
       if (msg.newLocation) {
@@ -68,8 +76,11 @@
         return;
       }
       var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
-      entry += ": " + msg.text + "<br>";
-      document.getElementById("screen").innerHTML += entry;
+      if (msg.chat)
+        entry += " chats: " + msg.chat + "<br>";
+      if (msg.say)
+        entry += " says: " + msg.say + "<br>";
+      el("screen").innerHTML += entry;
     };
     connect('socket', receive);
   </script>
