@@ -32,8 +32,8 @@ class Location(dao: Dao) extends Actor {
 
     case Move(user, x, y) if actorsMap contains sender =>
       if (0 <= x && x <= 100 && 0 <= y && y <= 100 &&
-          Math.abs(user.position.x - x) <= 1 && Math.abs(user.position.y - y) <= 1) {
-        dao.updateUserPosition(user.id, user.position.location, x, y)
+          Math.abs(user.xy._1 - x) <= 1 && Math.abs(user.xy._2 - y) <= 1) {
+        dao.updateUserPosition(user.id, user.location, x, y)
         sender ! ConfirmMove(x, y)
       } else
         sender ! ConfirmMove(1, 1)

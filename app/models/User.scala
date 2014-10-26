@@ -3,7 +3,7 @@ package models
 import scala.slick.driver.H2Driver.simple._
 import scala.slick.lifted
 
-case class User(id: Long, version: Long, name: String, password: String, position: Position)
+case class User(id: Long, version: Long, name: String, password: String, var location: String, var xy: (Double, Double))
 
 class SlickUser(lTag: lifted.Tag) extends Table[(Long, Long, String, String, String, Double, Double)](lTag, "users") {
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
@@ -17,5 +17,3 @@ class SlickUser(lTag: lifted.Tag) extends Table[(Long, Long, String, String, Str
   def nameIdx = index("idx_user_name", name, unique = true)
   def namePasswordIdx = index("idx_user_name_password", (name, password), unique = true)
 }
-
-case class Position(var location: String, var x: Double, var y: Double)

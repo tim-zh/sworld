@@ -35,7 +35,7 @@ class DaoImpl extends Dao {
   def addUser(name: String, password: String, location: String, x: Double, y: Double): User = {
     db withDynTransaction {
       val id = (users.map(x => (x.name, x.password, x.location, x.x, x.y)) returning users.map(_.id)) += (name, password, location, x, y)
-      User(id, 0, name, password, Position(location, x, y))
+      User(id, 0, name, password, location, (x, y))
     }
   }
 
@@ -48,5 +48,5 @@ class DaoImpl extends Dao {
   }
 
 
-  private def convertUser(d: (Long, Long, String, String, String, Double, Double)) = User(d._1, d._2, d._3, d._4, Position(d._5, d._6, d._7))
+  private def convertUser(d: (Long, Long, String, String, String, Double, Double)) = User(d._1, d._2, d._3, d._4, d._5, (d._6, d._7))
 }

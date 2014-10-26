@@ -14,14 +14,13 @@ package object actors {
   case class ConfirmMove(x: Double, y: Double)
 
 
-  def filterNearbyUsers(x: Double, y: Double, users: Iterable[User], radius: Double) = users filter { user =>
-    checkDistance(getDistance(x, y, user.position.x, user.position.y), radius)
+  def filterNearbyUsers(xy: (Double, Double), users: Iterable[User], radius: Double) = users filter { user =>
+    getDistance(xy, user.xy) <= radius
   }
 
   def filterNearbyUsers(user: User, users: Iterable[User], radius: Double): Iterable[User] =
-    filterNearbyUsers(user.position.x, user.position.y, users, radius)
+    filterNearbyUsers(user.xy, users, radius)
 
-  def getDistance(x0: Double, y0: Double, x1: Double, y1: Double) = (x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1)
-
-  def checkDistance(distance: Double, radius: Double) = distance * distance <= radius * radius
+  def getDistance(xy0: (Double, Double), xy1: (Double, Double)) =
+    Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
 }
