@@ -27,6 +27,9 @@ class ClientConversationActor(out: ActorRef, var location: ActorRef, owner: User
 
     case ConfirmMove(x, y) =>
       owner.xy = (x, y)
+
+    case RejectMove(x, y) =>
+      owner.xy = (x, y)
       out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
 
     case jsObj: JsObject if jsObj.value contains "chat" =>

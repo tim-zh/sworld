@@ -36,7 +36,7 @@ class Location(dao: Dao) extends Actor {
         dao.updateUserPosition(user.id, user.location, x, y)
         sender ! ConfirmMove(x, y)
       } else
-        sender ! ConfirmMove(1, 1)
+        sender ! RejectMove(1, 1)
   }
 }
 

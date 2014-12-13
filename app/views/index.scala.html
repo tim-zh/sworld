@@ -8,16 +8,13 @@
   <input type="button" id="downButton" value="down">
   <input type="button" id="leftButton" value="left">
   <input type="button" id="rightButton" value="right">
-  @*<script>
-  var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
-  game.state.add('Load', GameStates.Load);
-  game.state.add('MainMenu', GameStates.MainMenu);
-  game.state.add('MainGame', GameStates.MainGame);
-  game.state.start('Load');
-
-  connect('socket', function(message) {console.log(JSON.parse(message.data))});
-  </script>*@
   <script>
+	  var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
+	  game.state.add('Load', GameStates.Load);
+	  game.state.add('MainMenu', GameStates.MainMenu);
+	  game.state.add('MainGame', GameStates.MainGame);
+	  game.state.start('Load');
+
     var el = function(id) { return document.getElementById(id) };
     var chat = function() {
       var message = {};

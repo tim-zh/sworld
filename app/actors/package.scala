@@ -12,6 +12,7 @@ package object actors {
 
   case class Move(user: User, x: Double, y: Double)
   case class ConfirmMove(x: Double, y: Double)
+  case class RejectMove(x: Double, y: Double)
 
 
   def filterNearbyUsers(xy: (Double, Double), users: Iterable[User], radius: Double) = users filter { user =>
