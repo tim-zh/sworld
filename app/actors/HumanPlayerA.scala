@@ -2,56 +2,53 @@ package actors
 
 import akka.actor._
 import models.User
-import play.api.libs.json.{JsBoolean, JsObject, JsValue, Json}
+import play.api.libs.json.{JsBoolean, JsObject, Json}
 
-class HumanPlayerA(out: ActorRef, var location: ActorRef, owner: User) extends PlayerA {
+class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, owner: User) extends PlayerA(initialLocation, owner) {
+
 	override def preStart() {
-		location ! LocationA.EnterLocation(owner)
+		super.preStart()
 		out ! Json.obj("move" -> Json.obj("x" -> owner.xy._1, "y" -> owner.xy._2))
 	}
 
-	def receive = {
-		//from client
+	override def locationEntered(newLocation: ActorRef) {
+		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> owner.xy._1, "y" -> owner.xy._2))
+	}
 
+	override def moveRejected(x: Double, y: Double) {
+		out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
+	}
+
+	override def listenChat(user: User, msg: String) {
+		var message = Json.obj("chat" -> msg, "user" -> user.name)
+		if (user.id == owner.id)
+			message = message + ("isOwner" -> JsBoolean(true))
+		out ! message
+	}
+
+	override def listen(user: User, msg: String) {
+		var message = Json.obj("say" -> msg, "user" -> user.name)
+		if (user.id == owner.id)
+			message = message + ("isOwner" -> JsBoolean(true))
+		out ! message
+	}
+
+	override def handleMessage: Receive = {
 		case jsObj: JsObject if jsObj.value contains "newLocation" =>
-			val path = "/user/" + (jsObj \ "newLocation").as[String]
-			context.actorSelection(path) ! LocationA.EnterLocation(owner)
+			val name = (jsObj \ "newLocation").as[String]
+			enterLocation(name)
 
 		case jsObj: JsObject if jsObj.value contains "move" =>
 			val newX = (jsObj \ "move" \ "x").as[Double]
 			val newY = (jsObj \ "move" \ "y").as[Double]
-			location ! LocationA.Move(owner, newX, newY)
+			move(newX, newY)
 
 		case jsObj: JsObject if jsObj.value contains "chat" =>
-			location ! LocationA.Chat(owner, (jsObj \ "chat").as[String])
+			val msg = (jsObj \ "chat").as[String]
+			chat(msg)
 
 		case jsObj: JsObject if jsObj.value contains "say" =>
-			location ! LocationA.Say(owner, (jsObj \ "say").as[String])
-
-		//from location
-
-		case PlayerA.EnterLocation if location != sender =>
-			location ! LocationA.LeaveLocation
-			location = sender
-			out ! Json.obj("newLocation" -> sender.path.name, "move" -> Json.obj("x" -> owner.xy._1, "y" -> owner.xy._2))
-
-		case PlayerA.ConfirmMove(x, y) =>
-			owner.xy = (x, y)
-
-		case PlayerA.RejectMove(x, y) =>
-			owner.xy = (x, y)
-			out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
-
-		case PlayerA.Chat(user, msg) if sender == location =>
-			var message = Json.obj("chat" -> msg, "user" -> user.name)
-			if (user.id == owner.id)
-				message = message + ("isOwner" -> JsBoolean(true))
-			out ! message
-
-		case PlayerA.Say(user, msg) if sender == location =>
-			var message = Json.obj("say" -> msg, "user" -> user.name)
-			if (user.id == owner.id)
-				message = message + ("isOwner" -> JsBoolean(true))
-			out ! message
+			val msg = (jsObj \ "say").as[String]
+			say(msg)
 	}
 }

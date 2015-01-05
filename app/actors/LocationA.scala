@@ -5,13 +5,13 @@ import models.{User, Dao}
 import play.libs.Akka
 
 object LocationA {
-	case class EnterLocation(user: User)
-	object LeaveLocation
+	case class Enter(user: User)
+	object Leave
 
-	case class Move(user: User, x: Double, y: Double)
+	case class MoveUser(user: User, x: Double, y: Double)
 
-	case class Say(user: User, msg: String)
-	case class Chat(user: User, msg: String)
+	case class Broadcast(user: User, msg: String)
+	case class BroadcastChat(user: User, msg: String)
 
 	def create(name: String, dao: Dao) = Akka.system().actorOf(Props(classOf[LocationA], dao), name)
 
@@ -30,13 +30,13 @@ class LocationA(dao: Dao) extends Actor {
 	private var usersMap = Map[User, ActorRef]()
 
 	def receive = {
-		case LocationA.EnterLocation(user) =>
+		case LocationA.Enter(user) =>
 			actorsMap += (sender -> user)
 			usersMap += (user -> sender)
 			context watch sender
-			sender ! PlayerA.EnterLocation
+			sender ! PlayerA.LocationEntered
 
-		case LocationA.LeaveLocation =>
+		case LocationA.Leave =>
 			usersMap -= actorsMap.getOrElse(sender, null)
 			actorsMap -= sender
 
@@ -44,18 +44,18 @@ class LocationA(dao: Dao) extends Actor {
 			usersMap -= actorsMap.getOrElse(sender, null)
 			actorsMap -= actor
 
-		case LocationA.Chat(user, msg) if actorsMap contains sender =>
-			actorsMap foreach(_._1 ! PlayerA.Chat(user, msg))
+		case LocationA.BroadcastChat(user, msg) if actorsMap contains sender =>
+			actorsMap foreach(_._1 ! PlayerA.ListenChat(user, msg))
 
-		case LocationA.Say(user, msg) if actorsMap contains sender =>
+		case LocationA.Broadcast(user, msg) if actorsMap contains sender =>
 			val user = actorsMap(sender)
-			LocationA.filterNearbyUsers(user, usersMap.keySet toSeq, 4) map { usersMap(_) ! PlayerA.Say(user, msg) }
+			LocationA.filterNearbyUsers(user, usersMap.keySet toSeq, 4) map { usersMap(_) ! PlayerA.Listen(user, msg) }
 
-		case LocationA.Move(user, x, y) if actorsMap contains sender =>
+		case LocationA.MoveUser(user, x, y) if actorsMap contains sender =>
 			if (0 <= x && x <= 100 && 0 <= y && y <= 100 && Math.abs(user.xy._1 - x) <= 1 && Math.abs(user.xy._2 - y) <= 1) {
 				dao.updateUserPosition(user.id, user.location, x, y)
-				sender ! PlayerA.ConfirmMove(x, y)
+				sender ! PlayerA.MoveConfirmed(x, y)
 			} else
-				sender ! PlayerA.RejectMove(1, 1)
+				sender ! PlayerA.MoveRejected(1, 1)
 	}
 }
