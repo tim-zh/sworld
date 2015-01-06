@@ -49,6 +49,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, owner: User) extend
 
 		case jsObj: JsObject if jsObj.value contains "say" =>
 			val msg = (jsObj \ "say").as[String]
-			say(msg)
+			say(msg, 4)
 	}
 }

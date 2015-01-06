@@ -12,6 +12,6 @@ class BotPlayerA(initialLocation: ActorRef, owner: User) extends PlayerA(initial
 
 	override def listen(user: User, msg: String) {
 		if (user != owner && msg == "hi")
-			say("hi")
+			say("hi", 4)
 	}
 }

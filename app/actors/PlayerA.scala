@@ -57,7 +57,7 @@ abstract class PlayerA(var location: ActorRef, owner: User) extends Actor {
 
 	def chat(msg: String) { location ! LocationA.BroadcastChat(owner, msg) }
 
-	def say(msg: String) { location ! LocationA.Broadcast(owner, msg) }
+	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(owner, msg, radius) }
 	
 	def move(x: Double, y: Double) { location ! LocationA.MoveUser(owner, x, y) }
 	
