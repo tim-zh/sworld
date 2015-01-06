@@ -32,6 +32,13 @@ object LocationA {
 class LocationA(dao: Dao) extends Actor {
 	private var actorsMap = Map[ActorRef, User]()
 	private var usersMap = Map[User, ActorRef]()
+	private var messaging: ActorRef = null
+	private var map: ActorRef = null
+
+	override def preStart() {
+		messaging = context.actorOf(Props(classOf[MessagingA]))
+		map = context.actorOf(Props(classOf[MapA]))
+	}
 
 	def receive = {
 		case LocationA.Enter(user) =>
@@ -55,8 +62,8 @@ class LocationA(dao: Dao) extends Actor {
 		case LocationA.ProcessPlayers(x, y, radius, function) =>
 			LocationA.filterNearbyUsers((x, y), usersMap.keySet toSeq, radius) foreach function
 
-		case LocationA.BroadcastChat(user, msg) if actorsMap contains sender =>
-			actorsMap.keySet foreach { _ ! PlayerA.ListenChat(user, msg) }
+		case broadcast: LocationA.BroadcastChat if actorsMap contains sender =>
+			messaging forward broadcast
 
 		case LocationA.Broadcast(user, msg, radius) if actorsMap contains sender =>
 			val user = actorsMap(sender)
