@@ -1,12 +1,13 @@
 package actors
 
 import akka.actor.{Actor, ActorRef, Props, Terminated}
-import models.{User, Dao}
+import models.User
 import play.libs.Akka
 
 import scala.collection.parallel.mutable.ParMap
 
 object LocationA {
+
 	case class Enter(user: User)
 	object Leave
 
@@ -21,7 +22,7 @@ object LocationA {
 	case class Broadcast(user: User, msg: String, radius: Double)
 	case class BroadcastChat(user: User, msg: String)
 
-	def create(name: String, dao: Dao) = Akka.system().actorOf(Props(classOf[LocationA], dao), name)
+	def create(name: String, dao: ActorRef) = Akka.system().actorOf(Props(classOf[LocationA], dao), name)
 
 	def filterNearbyPlayers(xy: (Double, Double), users: ParMap[User, ActorRef], radius: Double) =
 		if (radius == -1)
@@ -33,7 +34,7 @@ object LocationA {
 		Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
 }
 
-class LocationA(dao: Dao) extends Actor {
+class LocationA(dao: ActorRef) extends Actor {
 	private var actorsMap = ParMap[ActorRef, User]()
 	private var usersMap = ParMap[User, ActorRef]()
 	private var messaging: ActorRef = null
@@ -41,7 +42,7 @@ class LocationA(dao: Dao) extends Actor {
 
 	override def preStart() {
 		messaging = context.actorOf(Props(classOf[MessagingA]))
-		map = context.actorOf(Props(classOf[MapA]))
+		map = context.actorOf(Props(classOf[MapA], dao))
 	}
 
 	def receive = {
@@ -72,11 +73,7 @@ class LocationA(dao: Dao) extends Actor {
 		case broadcast @ (_: LocationA.BroadcastChat | _: LocationA.Broadcast) if actorsMap contains sender =>
 			messaging forward broadcast
 
-		case LocationA.MoveUser(user, x, y) if actorsMap contains sender =>
-			if (0 <= x && x <= 100 && 0 <= y && y <= 100 && Math.abs(user.xy._1 - x) <= 1 && Math.abs(user.xy._2 - y) <= 1) {
-				dao.updateUserPosition(user.id, user.location, x, y)
-				sender ! PlayerA.MoveConfirmed(x, y)
-			} else
-				sender ! PlayerA.MoveRejected(1, 1)
+		case move: LocationA.MoveUser if actorsMap contains sender =>
+			map forward move
 	}
 }

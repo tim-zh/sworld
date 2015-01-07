@@ -10,8 +10,9 @@ import play.api.Play.current
 import scala.concurrent.Future
 
 object Application extends Controller {
-  val defaultLocation = LocationA.create("default", dao)
-  val customLocation = LocationA.create("custom", dao)
+  val daoA = DaoA.create(dao)
+  val defaultLocation = LocationA.create("default", daoA)
+  val customLocation = LocationA.create("custom", daoA)
 
   def index = Action { implicit req =>
     val user = getUserFromSession
