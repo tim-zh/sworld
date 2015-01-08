@@ -91,6 +91,8 @@ var getPlayer = function(x, y) {
 				this.frame = 7;
 			this.direction = null;
 		}
+		if (isMoving)
+			sendMessage({ move: { x: this.body.x, y: this.body.y } });
 	};
 	game.camera.follow(player);
 	return player;
