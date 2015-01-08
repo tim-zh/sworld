@@ -21,7 +21,7 @@ abstract class PlayerA(var location: ActorRef, owner: User) extends Actor {
  	}
 
 	override def receive = {
-		case PlayerA.LocationEntered if location != sender =>
+		case PlayerA.LocationEntered =>
 			locationEntered(sender)
 
 		case PlayerA.MoveConfirmed(x, y) =>

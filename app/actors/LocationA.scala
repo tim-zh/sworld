@@ -12,6 +12,7 @@ object LocationA {
 	object Leave
 
 	case class LookupPlayers(x: Double, y: Double, radius: Double, param: AnyRef)
+	case class FilterPlayers(x: Double, y: Double, function: User => Boolean, param: AnyRef)
 	case class LookupPlayersResult(users: ParMap[User, ActorRef], param: AnyRef)
 	case class ProcessPlayers(x: Double, y: Double, radius: Double, function: User => Unit)
 
@@ -65,6 +66,10 @@ class LocationA(dao: ActorRef) extends Actor {
 
 		case LocationA.LookupPlayers(x, y, radius, param) =>
 			val filteredPlayers = LocationA.filterNearbyPlayers((x, y), usersMap, radius)
+			sender ! LocationA.LookupPlayersResult(filteredPlayers, param)
+
+		case LocationA.FilterPlayers(x, y, function, param) =>
+			val filteredPlayers = usersMap filter { p => function(p._1) }
 			sender ! LocationA.LookupPlayersResult(filteredPlayers, param)
 
 		case LocationA.ProcessPlayers(x, y, radius, function) =>
