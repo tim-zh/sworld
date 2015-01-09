@@ -23,7 +23,7 @@ object LocationA {
 	case class Broadcast(user: User, msg: String, radius: Double)
 	case class BroadcastChat(user: User, msg: String)
 
-	def create(name: String, dao: ActorRef) = Akka.system().actorOf(Props(classOf[LocationA], dao), name)
+	def create(name: String, filename: String, dao: ActorRef) = Akka.system().actorOf(Props(classOf[LocationA], filename, dao), name)
 
 	def filterNearbyPlayers(xy: (Double, Double), users: ParMap[User, ActorRef], radius: Double) =
 		if (radius == -1)
@@ -35,7 +35,7 @@ object LocationA {
 		Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
 }
 
-class LocationA(dao: ActorRef) extends Actor {
+class LocationA(tiledMapFile: String, dao: ActorRef) extends Actor {
 	private var actorsMap = ParMap[ActorRef, User]()
 	private var usersMap = ParMap[User, ActorRef]()
 	private var messaging: ActorRef = null
@@ -43,7 +43,7 @@ class LocationA(dao: ActorRef) extends Actor {
 
 	override def preStart() {
 		messaging = context.actorOf(Props(classOf[MessagingA]))
-		map = context.actorOf(Props(classOf[MapA], dao))
+		map = context.actorOf(Props(classOf[MapA], tiledMapFile, dao))
 	}
 
 	def receive = {

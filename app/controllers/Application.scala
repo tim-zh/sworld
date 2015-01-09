@@ -11,8 +11,7 @@ import scala.concurrent.Future
 
 object Application extends Controller {
   val daoA = DaoA.create(dao)
-  val defaultLocation = LocationA.create("default", daoA)
-  val customLocation = LocationA.create("custom", daoA)
+  val defaultLocation = LocationA.create("default", "public/data/test_map.json", daoA)
 
   def index = Action { implicit req =>
     val user = getUserFromSession
@@ -21,12 +20,12 @@ object Application extends Controller {
 
   def socket = WebSocket.tryAcceptWithActor[JsValue, JsValue] { implicit request =>
     val user = getUserFromSession
-    Future.successful(
+    Future.successful {
       if (user.isDefined)
         Right((out: ActorRef) => Props(classOf[HumanPlayerA], out, defaultLocation, user.get))
       else
         Left(Forbidden)
-    )
+    }
   }
 
   def register() = Action { implicit req =>
