@@ -33,7 +33,7 @@ abstract class PlayerA(var location: ActorRef, owner: User) extends Actor {
 		case PlayerA.ListenChat(user, msg) if sender == location =>
 			listenChat(user, msg)
 
-		case PlayerA.Listen(user, msg) if sender == location =>
+		case PlayerA.Listen(user, msg) if sender == location => //todo check
 			listen(user, msg)
 
 		case msg =>

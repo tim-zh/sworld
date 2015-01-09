@@ -9,7 +9,7 @@ class MapA(tiledMapFile: String, dao: ActorRef) extends Actor {
 
 	override def preStart() {
 		val mapReader: TMXMapReader = new TMXMapReader
-		//map = mapReader.readMap(tiledMapFile) todo tiled can only read xml in java
+		map = mapReader.readMap(tiledMapFile)
 	}
 
 	def receive = {

@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 object Application extends Controller {
   val daoA = DaoA.create(dao)
-  val defaultLocation = LocationA.create("default", "public/data/test_map.json", daoA)
+  val defaultLocation = LocationA.create("default", "public/data/test_map.tmx", daoA)
 
   def index = Action { implicit req =>
     val user = getUserFromSession
