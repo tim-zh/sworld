@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor.{Actor, ActorRef}
-import tiled.core.TileLayer
+import tiled.core.{MapLayer, ObjectGroup, TileLayer}
 import tiled.io.TMXMapReader
 
 class MapA(tiledMapFile: String, dao: ActorRef) extends Actor {
@@ -21,9 +21,10 @@ class MapA(tiledMapFile: String, dao: ActorRef) extends Actor {
 				sender ! PlayerA.MoveRejected(user.xy._1, user.xy._2)
 	}
 
-	def isTileBlock(x: Double, y: Double) = {
-		val properties = map.iterator().next().asInstanceOf[TileLayer].
-				getTileInstancePropertiesAt(x.asInstanceOf[Int] / map.getTileWidth, y.asInstanceOf[Int] / map.getTileHeight)
-		false//properties.contains("block?")
+	def isTileBlock(x: Double, y: Double): Boolean = {
+    for (group: MapLayer <- map.iterator() if group.isInstanceOf[ObjectGroup])
+      if (group.asInstanceOf[ObjectGroup].getObjectAt(x.asInstanceOf[Int] / map.getTileWidth, y.asInstanceOf[Int] / map.getTileHeight) != null)
+        return true
+		false
 	}
 }
