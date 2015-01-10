@@ -1,14 +1,16 @@
 package actors
 
 import akka.actor.{Actor, ActorRef}
-import tiled.core.{MapLayer, ObjectGroup, TileLayer}
+import tiled.core.{MapLayer, ObjectGroup}
 import tiled.io.TMXMapReader
+import scala.collection.JavaConversions._
 
 class MapA(tiledMapFile: String, dao: ActorRef) extends Actor {
 	var map: tiled.core.Map = _
 
 	override def preStart() {
 		val mapReader: TMXMapReader = new TMXMapReader
+		mapReader.setLoadTilesets(false)
 		map = mapReader.readMap(tiledMapFile)
 	}
 
