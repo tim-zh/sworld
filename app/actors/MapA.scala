@@ -15,18 +15,18 @@ class MapA(tiledMapFile: String, dao: ActorRef) extends Actor {
 	}
 
 	def receive = {
-		case LocationA.MoveUser(user, x, y) =>
-			if (0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(user.xy._1 - x) <= 10 && Math.abs(user.xy._2 - y) <= 10) {
-				dao ! DaoA.UpdateUserPosition(user)
-				sender ! PlayerA.MoveConfirmed(x, y)
+		case LocationA.MoveEntity(entity, x, y) =>
+			if (0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10) {
+				dao ! DaoA.UpdateEntityPosition(entity)
+				sender ! GameEntityA.MoveConfirmed(x, y)
 			} else
-				sender ! PlayerA.MoveRejected(user.xy._1, user.xy._2)
+				sender ! GameEntityA.MoveRejected(entity.x, entity.y)
 	}
 
 	def isTileBlock(x: Double, y: Double): Boolean = {
-    for (group: MapLayer <- map.iterator() if group.isInstanceOf[ObjectGroup])
-      if (group.asInstanceOf[ObjectGroup].getObjectAt(x.asInstanceOf[Int] / map.getTileWidth, y.asInstanceOf[Int] / map.getTileHeight) != null)
-        return true
+		for (group: MapLayer <- map.iterator() if group.isInstanceOf[ObjectGroup])
+			if (group.asInstanceOf[ObjectGroup].getObjectAt(x.asInstanceOf[Int] / map.getTileWidth, y.asInstanceOf[Int] / map.getTileHeight) != null)
+				return true
 		false
 	}
 }

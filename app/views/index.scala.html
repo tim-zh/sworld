@@ -46,7 +46,7 @@
 		game.state.add('MainGame', GameStates.MainGame);
 		game.state.start('Load');
 	@if(user.isDefined) {
-		var playerStartPosition = [@user.get.xy._1, @user.get.xy._2];
+		var playerStartPosition = [@user.get.gameEntity.x, @user.get.gameEntity.y];
 	}
 	connect('socket', receive);
 </script>

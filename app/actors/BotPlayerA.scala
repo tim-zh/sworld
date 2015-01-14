@@ -1,17 +1,16 @@
 package actors
 
 import akka.actor.ActorRef
-import models.User
+import models.GameEntity
 
-//todo type bounds for actorRef
-class BotPlayerA(initialLocation: ActorRef, owner: User) extends PlayerA(initialLocation, owner) {
-	override def listenChat(user: User, msg: String) {
-		if (user != owner && msg == "hi")
+class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
+	override def listenChat(from: GameEntity, msg: String) {
+		if (from != from && msg == "hi")
 			chat("hi")
 	}
 
-	override def listen(user: User, msg: String) {
-		if (user != owner && msg == "hi")
+	override def listen(from: GameEntity, msg: String) {
+		if (from != from && msg == "hi")
 			say("hi", 4)
 	}
 }

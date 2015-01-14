@@ -1,34 +1,34 @@
 package actors
 
 import akka.actor._
-import models.User
+import models.GameEntity
 import play.api.libs.json.{JsBoolean, JsObject, Json}
 
-class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, owner: User) extends PlayerA(initialLocation, owner) {
+class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 
 	override def preStart() {
 		super.preStart()
-		out ! Json.obj("move" -> Json.obj("x" -> owner.xy._1, "y" -> owner.xy._2))
+		out ! Json.obj("move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
 	override def locationEntered(newLocation: ActorRef) {
-		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> owner.xy._1, "y" -> owner.xy._2))
+		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
 	override def moveRejected(x: Double, y: Double) {
 		out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
 	}
 
-	override def listenChat(user: User, msg: String) {
-		var message = Json.obj("chat" -> msg, "user" -> user.name)
-		if (user.id == owner.id)
+	override def listenChat(from: GameEntity, msg: String) {
+		var message = Json.obj("chat" -> msg, "user" -> from.name)
+		if (from.id == entity.id)
 			message = message + ("isOwner" -> JsBoolean(true))
 		out ! message
 	}
 
-	override def listen(user: User, msg: String) {
-		var message = Json.obj("say" -> msg, "user" -> user.name)
-		if (user.id == owner.id)
+	override def listen(from: GameEntity, msg: String) {
+		var message = Json.obj("say" -> msg, "user" -> from.name)
+		if (from.id == entity.id)
 			message = message + ("isOwner" -> JsBoolean(true))
 		out ! message
 	}
