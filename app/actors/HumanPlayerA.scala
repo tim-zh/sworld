@@ -1,5 +1,7 @@
 package actors
 
+import java.util.Random
+
 import akka.actor._
 import models.GameEntity
 import play.api.libs.json.{JsBoolean, JsObject, Json}
@@ -51,6 +53,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			val msg = (jsObj \ "say").as[String]
 			say(msg, 4)
 			if (msg == "rise")
-				createGameEntity(GameEntity(-1, true, "bot", entity.location, entity.x, entity.y))
+				createGameEntity(GameEntity(new Random(System.nanoTime() + hashCode()).nextLong(), true, "bot", entity.location, entity.x, entity.y))
 	}
 }
