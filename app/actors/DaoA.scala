@@ -13,7 +13,7 @@ object DaoA {
 
 class DaoA(dao: Dao) extends Actor {
 	override def receive = {
-		case DaoA.UpdateEntity(entity) if entity.id.isDefined =>
-			dao.updateGameEntity(entity.id.get, entity.name, entity.location, entity.x, entity.y)
+		case DaoA.UpdateEntity(entity) if !entity.transient =>
+			dao.updateGameEntity(entity.id, entity.name, entity.location, entity.x, entity.y)
 	}
 }

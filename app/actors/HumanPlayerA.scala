@@ -21,14 +21,14 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	override def listenChat(from: GameEntity, msg: String) {
 		var message = Json.obj("chat" -> msg, "user" -> from.name)
-		if (from.id.isDefined && from.id.get == entity.id.get)
+		if (from.id == entity.id)
 			message = message + ("isOwner" -> JsBoolean(true))
 		out ! message
 	}
 
 	override def listen(from: GameEntity, msg: String) {
 		var message = Json.obj("say" -> msg, "user" -> from.name)
-		if (from.id.isDefined && from.id.get == entity.id.get)
+		if (from.id == entity.id)
 			message = message + ("isOwner" -> JsBoolean(true))
 		out ! message
 	}
@@ -51,6 +51,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			val msg = (jsObj \ "say").as[String]
 			say(msg, 4)
 			if (msg == "rise")
-				createGameEntity(GameEntity(None, "bot", entity.location, entity.x, entity.y))
+				createGameEntity(GameEntity(-1, true, "bot", entity.location, entity.x, entity.y))
 	}
 }
