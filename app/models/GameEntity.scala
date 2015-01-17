@@ -3,7 +3,7 @@ package models
 import scala.slick.driver.H2Driver.simple._
 import scala.slick.lifted
 
-case class GameEntity(id: Long, name: String, var location: String, var x: Double, var y: Double)
+case class GameEntity(id: Option[Long], name: String, var location: String, var x: Double, var y: Double)
 
 class SlickGameEntity(lTag: lifted.Tag) extends Table[(Long, String, String, Double, Double)](lTag, "game_entity") {
 	def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
