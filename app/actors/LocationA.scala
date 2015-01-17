@@ -39,11 +39,9 @@ class LocationA(tiledMapFile: String, dao: ActorRef) extends Actor {
 	private var actorsMap = ParMap[ActorRef, GameEntity]()
 	private var entitiesMap = ParMap[GameEntity, ActorRef]()
 	private var messaging: ActorRef = null
-	private var map: ActorRef = null
 
 	override def preStart() {
 		messaging = context.actorOf(Props(classOf[MessagingA]))
-		map = context.actorOf(Props(classOf[MapA], tiledMapFile, dao))
 	}
 
 	def receive = {
@@ -78,7 +76,11 @@ class LocationA(tiledMapFile: String, dao: ActorRef) extends Actor {
 		case broadcast @ (_: LocationA.BroadcastChat | _: LocationA.Broadcast) if actorsMap contains sender =>
 			messaging forward broadcast
 
-		case move: LocationA.MoveEntity if actorsMap contains sender =>
-			map forward move
+		case LocationA.MoveEntity(entity, x, y) if actorsMap contains sender =>
+			if (0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10) {
+				dao ! DaoA.UpdateEntityPosition(entity)
+				sender ! GameEntityA.MoveConfirmed(x, y)
+			} else
+				sender ! GameEntityA.MoveRejected(entity.x, entity.y)
 	}
 }
