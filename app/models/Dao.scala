@@ -15,9 +15,9 @@ trait Dao {
 
 	def getGameEntity(id: Long): Option[GameEntity]
 
-	def addGameEntity(name: String, location: String, x: Double, y: Double): GameEntity
+	def addGameEntity(eType: String, name: String, location: String, x: Double, y: Double, view_radius: Double): GameEntity
 
 	def deleteGameEntity(id: Long): Boolean
 
-	def updateGameEntity(id: Long, name: String, location: String, x: Double, y: Double): Boolean
+	def updateGameEntity(id: Long, eType: String, name: String, location: String, x: Double, y: Double, view_radius: Double): Boolean
 }

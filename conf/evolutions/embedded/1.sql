@@ -1,13 +1,13 @@
 # --- !Ups
 
 create table "users" (
-	"id" BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	"version" BIGINT DEFAULT 0 NOT NULL,
-	"name" VARCHAR NOT NULL,
-	"password" VARCHAR NOT NULL,
-  "location" VARCHAR NOT NULL,
-  "x" DOUBLE DEFAULT 0 NOT NULL,
-  "y" DOUBLE DEFAULT 0 NOT NULL);
+	"id" bigint not null auto_increment primary key,
+	"version" bigint default 0 not null,
+	"name" varchar not null,
+	"password" varchar not null,
+  "location" varchar not null,
+  "x" double default 0 not null,
+  "y" double default 0 not null);
 
 # --- !Downs
 

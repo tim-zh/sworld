@@ -38,7 +38,7 @@ object Application extends Controller {
 			registerData => {
 				val errors = registerData.validate
 				if (errors.isEmpty) {
-					val userInfo = dao.addGameEntity(registerData.name, "default", 1, 1)
+					val userInfo = dao.addGameEntity("player", registerData.name, "default", 1, 1, 100)
 					val newUser = dao.addUser(registerData.name, registerData.password, userInfo)
 					AuthController.authUser(Some(newUser))
 				} else

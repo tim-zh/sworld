@@ -27,6 +27,10 @@
 			document.title = msg.newLocation;
 			return;
 		}
+		if (msg.entities) {
+			//todo process entities in view
+			return;
+		}
 		if (msg.move) {
 			getPlayer().body.x = msg.move.x;
 			getPlayer().body.y = msg.move.y;

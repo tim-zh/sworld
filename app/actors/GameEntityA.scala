@@ -1,7 +1,13 @@
 package actors
 
-import akka.actor.{Actor, ActorRef}
+import java.util.Random
+
+import akka.actor.{Cancellable, Actor, ActorRef}
 import models.GameEntity
+
+import scala.collection.parallel.mutable.ParMap
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object GameEntityA {
 
@@ -12,28 +18,47 @@ object GameEntityA {
 
 	case class Listen(from: GameEntity, msg: String)
 	case class ListenChat(from: GameEntity, msg: String)
+
+	private object LookAround
 }
 
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends Actor {
+	import GameEntityA._
+
+
+	private val random = new Random(System.nanoTime() + hashCode())
+	private var lookAroundTick: Cancellable = null
+
+	protected def generateId() = synchronized { random.nextLong() }
 
 	override def preStart() {
- 		location ! LocationA.Enter(entity)
- 	}
+		location ! LocationA.Enter(entity)
+	}
 
 	override def receive = {
-		case GameEntityA.LocationEntered =>
+		case LocationEntered =>
+			if (lookAroundTick != null)
+				lookAroundTick.cancel()
 			locationEntered(sender)
+			lookAroundTick = context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
 
-		case GameEntityA.MoveConfirmed(x, y) if sender == location =>
+		case LookAround =>
+			location ! LocationA.LookupEntities(entity.x, entity.y, entity.view_radius, null)
+
+		case LocationA.LookupEntitiesResult(entities, param) =>
+			lookAround(entities)
+			context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
+
+		case MoveConfirmed(x, y) if sender == location =>
 			moveConfirmed(x, y)
 
-		case GameEntityA.MoveRejected(x, y) if sender == location =>
+		case MoveRejected(x, y) if sender == location =>
 			moveRejected(x, y)
 
-		case GameEntityA.ListenChat(from, msg) if sender == location =>
+		case ListenChat(from, msg) if sender == location =>
 			listenChat(from, msg)
 
-		case GameEntityA.Listen(from, msg) if sender == location =>
+		case Listen(from, msg) if sender == location =>
 			listen(from, msg)
 
 		case msg =>
@@ -44,6 +69,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		location ! LocationA.Leave
 		location = newLocation
 	}
+
+	def lookAround(entities: ParMap[ActorRef, GameEntity]) {}
 
 	def moveConfirmed(x: Double, y: Double) {
 		entity.x = x
@@ -64,9 +91,9 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 	def chat(msg: String) { location ! LocationA.BroadcastChat(msg) }
 
 	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(msg, radius) }
-	
+
 	def move(x: Double, y: Double) { location ! LocationA.MoveEntity(x, y) }
-	
+
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity) }
 
 	def createGameEntity(entity: GameEntity) = entity.name match {

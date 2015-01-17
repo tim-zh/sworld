@@ -26,7 +26,7 @@ object DaoImpl extends Dao {
 		entities.filter(_.id === id))
 
 	private val queryGetEntityFieldsById = Compiled((id: Column[Long]) =>
- 		(for (i <- entities if i.id === id) yield i).map(x => (x.name, x.location, x.x, x.y)))
+ 		(for (i <- entities if i.id === id) yield i).map(e => (e.eType, e.name, e.location, e.x, e.y, e.view_radius)))
 
 
 	def getUser(name: String, password: String) = db withDynTransaction { queryGetUserByNamePass(name, password).firstOption map convertUser }
@@ -46,18 +46,19 @@ object DaoImpl extends Dao {
 
 	def getGameEntity(id: Long): Option[GameEntity] = db withDynTransaction { queryGetEntityById(id).firstOption map convertEntity }
 
-	def addGameEntity(name: String, location: String, x: Double, y: Double) = db withDynTransaction {
-		val id = (entities.map(x => (x.name, x.location, x.x, x.y)) returning entities.map(_.id)) += (name, location, x, y)
-		GameEntity(id, false, name, location, x, y)
+	def addGameEntity(eType: String, name: String, location: String, x: Double, y: Double, view_radius: Double) = db withDynTransaction {
+		val id = (entities.map(e => (e.eType, e.name, e.location, e.x, e.y, e.view_radius)) returning entities.map(_.id)) +=
+				(eType, name, location, x, y, view_radius)
+		GameEntity(id, false, eType, name, location, x, y, view_radius)
 	}
 
  	def deleteGameEntity(id: Long) = db withDynTransaction { queryGetEntityById(id).delete == 1 }
 
- 	def updateGameEntity(id: Long, name: String, location: String, x: Double, y: Double) = db withDynTransaction {
-		queryGetEntityFieldsById(id).update((name, location, x, y)) == 1 }
+ 	def updateGameEntity(id: Long, eType: String, name: String, location: String, x: Double, y: Double, view_radius: Double) = db withDynTransaction {
+		queryGetEntityFieldsById(id).update((eType, name, location, x, y, view_radius)) == 1 }
 
 
 	private def convertUser(d: (Long, Long, String, String, Long)) = User(d._1, d._2, d._3, d._4, d._5)
 
-	private def convertEntity(d: (Long, String, String, Double, Double)) = GameEntity(d._1, false, d._2, d._3, d._4, d._5)
+	private def convertEntity(d: (Long, String, String, String, Double, Double, Double)) = GameEntity(d._1, false, d._2, d._3, d._4, d._5, d._6, d._7)
 }

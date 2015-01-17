@@ -1,10 +1,10 @@
 package actors
 
-import java.util.Random
-
 import akka.actor._
 import models.GameEntity
 import play.api.libs.json.{JsBoolean, JsObject, Json}
+
+import scala.collection.parallel.mutable.ParMap
 
 class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 
@@ -15,6 +15,12 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	override def locationEntered(newLocation: ActorRef) {
 		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
+	}
+
+	override def lookAround(entities: ParMap[ActorRef, GameEntity]) {
+		val entitiesArr = Json.arr(entities.values.seq.
+				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)).toSeq)
+		out ! Json.obj("entities" -> entitiesArr)
 	}
 
 	override def moveRejected(x: Double, y: Double) {
@@ -53,6 +59,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			val msg = (jsObj \ "say").as[String]
 			say(msg, 4)
 			if (msg == "rise")
-				createGameEntity(GameEntity(new Random(System.nanoTime() + hashCode()).nextLong(), true, "bot", entity.location, entity.x, entity.y))
+				createGameEntity(GameEntity(generateId(), true, "bot", "bot", entity.location, entity.x, entity.y, 100))
 	}
 }
