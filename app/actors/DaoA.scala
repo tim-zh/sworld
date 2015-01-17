@@ -6,14 +6,14 @@ import play.libs.Akka
 
 object DaoA {
 
-	case class UpdateEntityPosition(entity: GameEntity)
+	case class UpdateEntity(entity: GameEntity)
 
 	def create(dao: Dao) = Akka.system().actorOf(Props(classOf[DaoA], dao))
 }
 
 class DaoA(dao: Dao) extends Actor {
 	override def receive = {
-		case DaoA.UpdateEntityPosition(entity) =>
+		case DaoA.UpdateEntity(entity) =>
 			dao.updateGameEntity(entity.id, entity.name, entity.location, entity.x, entity.y)
 	}
 }

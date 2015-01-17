@@ -24,16 +24,16 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		case GameEntityA.LocationEntered =>
 			locationEntered(sender)
 
-		case GameEntityA.MoveConfirmed(x, y) =>
+		case GameEntityA.MoveConfirmed(x, y) if sender == location =>
 			moveConfirmed(x, y)
 
-		case GameEntityA.MoveRejected(x, y) =>
+		case GameEntityA.MoveRejected(x, y) if sender == location =>
 			moveRejected(x, y)
 
-		case GameEntityA.ListenChat(from, msg) =>
+		case GameEntityA.ListenChat(from, msg) if sender == location =>
 			listenChat(from, msg)
 
-		case GameEntityA.Listen(from, msg) =>
+		case GameEntityA.Listen(from, msg) if sender == location =>
 			listen(from, msg)
 
 		case msg =>
@@ -61,11 +61,11 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 
 	def handleMessage: Receive = { case _ => }
 
-	def chat(msg: String) { location ! LocationA.BroadcastChat(entity, msg) }
+	def chat(msg: String) { location ! LocationA.BroadcastChat(msg) }
 
-	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(entity, msg, radius) }
+	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(msg, radius) }
 	
-	def move(x: Double, y: Double) { location ! LocationA.MoveEntity(entity, x, y) }
+	def move(x: Double, y: Double) { location ! LocationA.MoveEntity(x, y) }
 	
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity) }
 }

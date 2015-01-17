@@ -1,6 +1,6 @@
 package actors
 
-import akka.actor.{Actor, ActorRef, Props, Terminated}
+import akka.actor._
 import models.GameEntity
 import play.libs.Akka
 
@@ -12,75 +12,74 @@ object LocationA {
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class FilterEntities(x: Double, y: Double, function: GameEntity => Boolean, param: AnyRef)
-	case class LookupEntitiesResult(entities: ParMap[GameEntity, ActorRef], param: AnyRef)
-	case class ProcessEntities(x: Double, y: Double, radius: Double, function: GameEntity => Unit)
+	case class LookupEntitiesResult(entities: ParMap[ActorRef, GameEntity], param: AnyRef)
 
 	case class SendMessage[+T](to: GameEntity, msg: T)
 
-	case class MoveEntity(entity: GameEntity, x: Double, y: Double)
+	case class MoveEntity(x: Double, y: Double)
 
-	case class Broadcast(from: GameEntity, msg: String, radius: Double)
-	case class BroadcastChat(from: GameEntity, msg: String)
+	case class Broadcast(msg: String, radius: Double)
+	case class BroadcastChat(msg: String)
 
-	def create(name: String, filename: String, dao: ActorRef) = Akka.system().actorOf(Props(classOf[LocationA], filename, dao), name)
-
-	def filterNearbyEntities(xy: (Double, Double), entities: ParMap[GameEntity, ActorRef], radius: Double) =
-		if (radius == -1)
-			entities
-		else
-			entities filter { entityActor => getDistance(xy, (entityActor._1.x, entityActor._1.y)) <= radius }
-
-	def getDistance(xy0: (Double, Double), xy1: (Double, Double)) =
-		Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
+	def create(name: String, dao: ActorRef) = Akka.system().actorOf(Props(classOf[LocationA], dao), name)
 }
 
-class LocationA(tiledMapFile: String, dao: ActorRef) extends Actor {
+class LocationA(dao: ActorRef) extends Actor {
+	import actors.LocationA._
+
 	private var actorsMap = ParMap[ActorRef, GameEntity]()
 	private var entitiesMap = ParMap[GameEntity, ActorRef]()
-	private var messaging: ActorRef = null
-
-	override def preStart() {
-		messaging = context.actorOf(Props(classOf[MessagingA]))
-	}
 
 	def receive = {
-		case LocationA.Enter(entity) =>
+		case Enter(entity) =>
 			actorsMap += (sender -> entity)
 			entitiesMap += (entity -> sender)
 			context watch sender
 			sender ! GameEntityA.LocationEntered
 
-		case LocationA.Leave =>
+		case Leave =>
 			entitiesMap -= actorsMap.getOrElse(sender, null)
 			actorsMap -= sender
 
 		case Terminated(actor) =>
-			entitiesMap -= actorsMap.getOrElse(sender, null)
+			entitiesMap -= actorsMap.getOrElse(actor, null)
 			actorsMap -= actor
 
-		case LocationA.SendMessage(to, msg) =>
+		case SendMessage(to, msg) =>
 			entitiesMap.get(to) foreach { _ forward msg }
 
-		case LocationA.LookupEntities(x, y, radius, param) =>
-			val filtered = LocationA.filterNearbyEntities((x, y), entitiesMap, radius)
-			sender ! LocationA.LookupEntitiesResult(filtered, param)
+		case LookupEntities(x, y, radius, param) =>
+			val filtered = filterNearbyEntities((x, y), radius)
+			sender ! LookupEntitiesResult(filtered, param)
 
-		case LocationA.FilterEntities(x, y, function, param) =>
-			val filtered = entitiesMap filter { p => function(p._1) }
-			sender ! LocationA.LookupEntitiesResult(filtered, param)
+		case BroadcastChat(msg) if actorsMap contains sender =>
+			val entity = actorsMap(sender)
+			actorsMap foreach { _._1 ! GameEntityA.ListenChat(entity, msg) }
 
-		case LocationA.ProcessEntities(x, y, radius, function) =>
-			LocationA.filterNearbyEntities((x, y), entitiesMap, radius) foreach { p => function(p._1) }
+		case Broadcast(msg, radius) if actorsMap contains sender =>
+			val entity = actorsMap(sender)
+			filterNearbyEntities((entity.x, entity.y), radius) map { _._1 ! GameEntityA.Listen(entity, msg) }
 
-		case broadcast @ (_: LocationA.BroadcastChat | _: LocationA.Broadcast) if actorsMap contains sender =>
-			messaging forward broadcast
-
-		case LocationA.MoveEntity(entity, x, y) if actorsMap contains sender =>
-			if (0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10) {
-				dao ! DaoA.UpdateEntityPosition(entity)
+		case MoveEntity(x, y) if actorsMap contains sender =>
+			val entity = actorsMap(sender)
+			if (isMoveAllowed(x, y, entity)) {
+				entity.x = x
+				entity.y = y
+				dao ! DaoA.UpdateEntity(entity)
 				sender ! GameEntityA.MoveConfirmed(x, y)
 			} else
 				sender ! GameEntityA.MoveRejected(entity.x, entity.y)
 	}
+
+	def filterNearbyEntities(xy: (Double, Double), radius: Double) =
+ 		if (radius == -1)
+			actorsMap
+ 		else
+			actorsMap filter { entityActor => getDistance(xy, (entityActor._2.x, entityActor._2.y)) <= radius }
+
+ 	def getDistance(xy0: (Double, Double), xy1: (Double, Double)) =
+ 		Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
+
+	def isMoveAllowed(x: Double, y: Double, entity: GameEntity) =
+		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10
 }
