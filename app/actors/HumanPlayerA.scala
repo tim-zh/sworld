@@ -50,5 +50,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		case jsObj: JsObject if jsObj.value contains "say" =>
 			val msg = (jsObj \ "say").as[String]
 			say(msg, 4)
+			if (msg == "rise")
+				createGameEntity(GameEntity(None, "bot", entity.location, entity.x, entity.y))
 	}
 }

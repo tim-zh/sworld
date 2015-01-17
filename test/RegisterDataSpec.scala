@@ -12,7 +12,7 @@ class RegisterDataSpec extends PlaySpec with MockitoSugar with OneAppPerSuite {
 	val dao = mock[Dao]
 
 	when(dao.getUser(anyString)) thenAnswer new Answer[Option[models.User]] {
-		override def answer(invocation: InvocationOnMock) = Some(models.User(0L, 0L, invocation.getArguments()(0).asInstanceOf[String], "", "", (0, 0)))
+		override def answer(invocation: InvocationOnMock) = Some(models.User(0L, 0L, invocation.getArguments()(0).asInstanceOf[String], "", 0))
 	}
 	when(dao.getUser("c")) thenReturn None
 

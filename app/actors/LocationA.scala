@@ -16,6 +16,8 @@ object LocationA {
 
 	case class SendMessage[+T](to: GameEntity, msg: T)
 
+	case class CreateEntity(clazz: Class[_], entity: GameEntity)
+
 	case class MoveEntity(x: Double, y: Double)
 
 	case class Broadcast(msg: String, radius: Double)
@@ -69,6 +71,9 @@ class LocationA(dao: ActorRef) extends Actor {
 				sender ! GameEntityA.MoveConfirmed(x, y)
 			} else
 				sender ! GameEntityA.MoveRejected(entity.x, entity.y)
+
+		case LocationA.CreateEntity(clazz, entity) =>
+			Akka.system().actorOf(Props(clazz, self, entity))
 	}
 
 	def filterNearbyEntities(xy: (Double, Double), radius: Double) =

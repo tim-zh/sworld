@@ -68,4 +68,9 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 	def move(x: Double, y: Double) { location ! LocationA.MoveEntity(x, y) }
 	
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity) }
+
+	def createGameEntity(entity: GameEntity) = entity.name match {
+		case "bot" =>
+			location ! LocationA.CreateEntity(classOf[BotPlayerA], entity)
+	}
 }
