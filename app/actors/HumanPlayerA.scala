@@ -19,7 +19,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	override def lookAround(entities: ParMap[ActorRef, GameEntity]) {
-		val entitiesArr = Json.arr(entities.values.seq.
+		val entitiesArr = Json.arr(entities.values.seq.view.filter(_.id != entity.id).
 				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)).toSeq)
 		out ! Json.obj("entities" -> entitiesArr)
 	}

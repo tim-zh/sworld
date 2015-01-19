@@ -1,16 +1,22 @@
-var GameObject = function(game, img, x, y) {
-	Phaser.Sprite.call(this, game, x, y, img);
+var GameObject = function(game, img, x, y, onUpdate) {
+	var animatedSprite = animatedSprites[img];
+	Phaser.Sprite.call(this, game, x, y, animatedSprite.name);
 	game.physics.p2.enable(this);
 	this.inputEnabled = true;
 	this.smoothed = false;
 	//this.scale.set(4);
 	this.body.damping = 0.95;
 	this.body.fixedRotation = true;
-	this.animations.add('side_walk', [2, 3], 6, true);
-	this.animations.add('down_walk', [4, 5, 6, 5], 6, true);
-	this.animations.add('up_walk', [8, 9, 10, 9], 6, true);
+	var a = animatedSprite.animations;
+	for (var i in a)
+		if (a.hasOwnProperty(i))
+			this.animations.add(a[i].name, a[i].frames, a[i].frameRate, a[i].loop);
+	this.directionUp = animatedSprite.directionUp;
+	this.directionDown = animatedSprite.directionDown;
+	this.directionSide = animatedSprite.directionSide;
 	this.anchor.set(0.5);
 	game.add.existing(this);
+	this.update = onUpdate;
 };
 GameObject.prototype = Object.create(Phaser.Sprite.prototype);
 GameObject.prototype.constructor = GameObject;
@@ -34,66 +40,55 @@ GameObject.prototype.removeMouseOver = function(f) {
 	this.events.onInputOver.remove(f, this);
 };
 
+var move = function(object, dx, dy) {
+	object.body.setZeroVelocity();
+	if (dx == 0 && dy == 0) {
+		object.animations.stop();
+		object.frame = 0;
+		object.direction = null;
+		return;
+	}
+
+	object.body.moveDown(dy);
+	object.body.moveRight(dx);
+
+	var direction;
+	if (Math.abs(dx) < Math.abs(dy)) {
+		if (dy < 0)
+			direction = object.directionUp;
+		else
+			direction = object.directionDown;
+	} else {
+		direction = object.directionSide;
+		object.scale.x = dx < 0 ? -1 : 1;
+	}
+	if (object.direction != direction) {
+		object.direction = direction;
+		object.animations.play(direction);
+	}
+};
+
 var keys;
 var player;
 var getPlayer = function(x, y) {
 	if (player)
 		return player;
-	player = new GameObject(game, 'char', x, y);
-	player.update = function() {
-		var isMoving = '';
-
-		if (keys.up.isDown) {
-			this.body.moveUp(100);
-			isMoving = true;
-			if (this.direction != 'up') {
-				this.animations.play('up_walk');
-				this.direction = 'up';
-			}
-		}
-		else if (keys.down.isDown) {
-			this.body.moveDown(100);
-			isMoving = true;
-			if (this.direction != 'down') {
-				this.animations.play('down_walk');
-				this.direction = 'down';
-			}
-		}
-
-		if (keys.left.isDown) {
-			this.body.moveLeft(100);
-			isMoving = true;
-			if (this.direction != 'left') {
-				this.animations.play('side_walk');
-				this.direction = 'left';
-			}
-		}
-		else if (keys.right.isDown) {
-			this.body.moveRight(100);
-			isMoving = true;
-			if (this.direction != 'right') {
-				this.animations.play('side_walk');
-				this.direction = 'right';
-			}
-		}
-
-		if (!isMoving)
-			this.body.setZeroVelocity();
-
-		if (!isMoving && this.direction) {
-			this.animations.stop();
-			this.frame = 0;
-			if (this.direction == 'left')
-				this.frame = 1;
-			if (this.direction == 'right')
-				this.frame = 1;
-			if (this.direction == 'up')
-				this.frame = 7;
-			this.direction = null;
-		}
-		if (isMoving)
+	var onUpdate = function() {
+		var dx = 0;
+		var dy = 0;
+		if (keys.up.isDown)
+			dy = -100;
+		else if (keys.down.isDown)
+			dy = 100;
+		if (keys.left.isDown)
+			dx = -100;
+		else if (keys.right.isDown)
+			dx = 100;
+		move(this, dx, dy);
+		if (dx != 0 || dy !=0)
 			sendMessage({ move: { x: this.body.x, y: this.body.y } });
 	};
+	player = new GameObject(game, 'char', x, y, onUpdate);
 	game.camera.follow(player);
 	return player;
 };

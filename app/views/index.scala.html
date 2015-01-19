@@ -1,57 +1,34 @@
 @(user: Option[User])
 @wrapper(user) {
-<div id="screen" class="screen"></div>
-<input type="text" id="text">
-<input type="button" id="sayButton" value="say">
-<input type="button" id="chatButton" value="chat">
-<script>
-	var el = function(id) { return document.getElementById(id) };
-	var chat = function() {
-		sendMessage({chat: el('text').value});
-		el('text').value = "";
-	};
-	el("chatButton").onclick = chat;
-	var say = function() {
-		var text = el('text').value;
-		sendMessage({ say: text });
-		el('text').value = "";
-	};
-	el("sayButton").onclick = say;
-	el("text").onkeydown = function(event) {
-		if (event.keyCode == 13)
-			say();
-	};
-	var receive = function(message) {
-		var msg = JSON.parse(message.data);
-		if (msg.newLocation) {
-			document.title = msg.newLocation;
-			return;
-		}
-		if (msg.entities) {
-			//todo process entities in view
-			return;
-		}
-		if (msg.move) {
-			getPlayer().body.x = msg.move.x;
-			getPlayer().body.y = msg.move.y;
-			return;
-		}
-		var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
-		if (msg.chat)
-			entry += " chats: " + msg.chat + "<br>";
-		if (msg.say)
-			entry += " says: " + msg.say + "<br>";
-		el("screen").innerHTML += entry;
-	};
+@if(user.isDefined) {
+	<div id="screen" class="screen"></div>
+	<input type="text" id="text">
+	<input type="button" id="sayButton" value="say">
+	<input type="button" id="chatButton" value="chat">
+	<script>
+		var el = function(id) { return document.getElementById(id) };
+		var chat = function() {
+			sendMessage({chat: el('text').value});
+			el('text').value = "";
+		};
+		el("chatButton").onclick = chat;
+		var say = function() {
+			var text = el('text').value;
+			sendMessage({ say: text });
+			el('text').value = "";
+		};
+		el("sayButton").onclick = say;
+		el("text").onkeydown = function(event) {
+			if (event.keyCode == 13)
+				say();
+		};
 
-	var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
-		game.state.add('Load', GameStates.Load);
-		game.state.add('MainMenu', GameStates.MainMenu);
-		game.state.add('MainGame', GameStates.MainGame);
-		game.state.start('Load');
-	@if(user.isDefined) {
 		var playerStartPosition = [@user.get.gameEntity.x, @user.get.gameEntity.y];
-	}
-	connect('socket', receive);
-</script>
+		var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
+			game.state.add('Load', GameStates.Load);
+			game.state.add('MainMenu', GameStates.MainMenu);
+			game.state.add('MainGame', GameStates.MainGame);
+			game.state.start('Load');
+	</script>
+}
 }

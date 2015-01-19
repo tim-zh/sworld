@@ -15,19 +15,30 @@ GameStates.MainGame.prototype = {
 		game.physics.p2.convertTilemap(map, layer);
 		game.physics.p2.setBoundsToWorld(true, true, true, true, false);
 
-		var ship0 = getPlayer(playerStartPosition[0], playerStartPosition[1]);
-		ship0.addMouseDown(function(){sendMessage({})});
-		/*var ship1 = new GameObject(game, 'ship', 240, 200);
-		ship1.update = function() {
-			var angle = Math.atan2(ship0.body.y - this.body.y, ship0.body.x - this.body.x);
-			this.body.rotation = angle + game.math.degToRad(90);
-			this.body.thrust(400);
+		var receive = function(message) {
+			var msg = JSON.parse(message.data);
+			if (msg.newLocation) {
+				document.title = msg.newLocation;
+				return;
+			}
+			if (msg.entities) {
+				//todo process entities in view
+				return;
+			}
+			if (msg.move) {
+				getPlayer().body.x = msg.move.x;
+				getPlayer().body.y = msg.move.y;
+				return;
+			}
+			var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
+			if (msg.chat)
+				entry += " chats: " + msg.chat + "<br>";
+			if (msg.say)
+				entry += " says: " + msg.say + "<br>";
+			el("screen").innerHTML += entry;
 		};
-		ship1.addMouseDown(function() {
-			console.log(123)
-		});
-		ship1.addCollisionCallback(function(b) {
-			console.log(b)
-		});*/
+
+		getPlayer(playerStartPosition[0], playerStartPosition[1]);
+		connect('socket', receive);
 	}
 };
