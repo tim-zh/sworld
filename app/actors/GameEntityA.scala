@@ -66,7 +66,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 	}
 
 	def locationEntered(newLocation: ActorRef) {
-		location ! LocationA.Leave
+		if (location != newLocation)
+			location ! LocationA.Leave
 		location = newLocation
 	}
 

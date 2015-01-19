@@ -14,6 +14,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	override def locationEntered(newLocation: ActorRef) {
+		super.locationEntered(newLocation)
 		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
@@ -24,6 +25,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	override def moveRejected(x: Double, y: Double) {
+		super.moveRejected(x, y)
 		out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
 	}
 
