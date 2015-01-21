@@ -39,7 +39,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 			lookAroundTick = context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
 
 		case LookAround =>
-			location ! LocationA.LookupEntities(entity.x, entity.y, entity.view_radius, null)
+			location ! LocationA.LookupEntities(entity.x, entity.y, entity.viewRadius, null)
 
 		case LocationA.LookupEntitiesResult(entities, param) =>
 			lookAround(entities)

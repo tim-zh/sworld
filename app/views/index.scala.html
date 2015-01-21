@@ -24,6 +24,7 @@
 		};
 
 		var playerStartPosition = [@user.get.gameEntity.x, @user.get.gameEntity.y];
+		var playerMaxSpeed = @user.get.gameEntity.maxSpeed;
 		var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
 			game.state.add('Load', GameStates.Load);
 			game.state.add('MainMenu', GameStates.MainMenu);

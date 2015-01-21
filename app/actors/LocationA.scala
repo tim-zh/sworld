@@ -23,7 +23,8 @@ object LocationA {
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
 
-	def create(name: String, dao: ActorRef, width: Int, height: Int, cellSize: Int) = Akka.system().actorOf(Props(classOf[LocationA], dao, width, height, cellSize), name)
+	def create(name: String, dao: ActorRef, width: Int, height: Int, cellSize: Int) =
+		Akka.system().actorOf(Props(classOf[LocationA], dao, width, height, cellSize), name)
 }
 
 class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends Actor {

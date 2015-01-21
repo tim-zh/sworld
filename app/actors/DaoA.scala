@@ -16,6 +16,6 @@ class DaoA(dao: Dao) extends Actor {
 
 	override def receive = {
 		case UpdateEntity(entity) if !entity.transient =>
-			dao.updateGameEntity(entity.id, entity.eType, entity.name, entity.location, entity.x, entity.y, entity.view_radius)
+			dao.updateGameEntity(entity.id, entity.eType, entity.name, entity.location, entity.x, entity.y, entity.viewRadius, entity.maxSpeed)
 	}
 }

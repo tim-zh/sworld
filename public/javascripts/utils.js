@@ -77,13 +77,13 @@ var getPlayer = function(x, y) {
 		var dx = 0;
 		var dy = 0;
 		if (keys.up.isDown)
-			dy = -100;
+			dy = -playerMaxSpeed;
 		else if (keys.down.isDown)
-			dy = 100;
+			dy = playerMaxSpeed;
 		if (keys.left.isDown)
-			dx = -100;
+			dx = -playerMaxSpeed;
 		else if (keys.right.isDown)
-			dx = 100;
+			dx = playerMaxSpeed;
 		move(this, dx, dy);
 		if (dx != 0 || dy !=0)
 			sendMessage({ move: { x: this.body.x, y: this.body.y } });
