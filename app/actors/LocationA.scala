@@ -5,7 +5,6 @@ import models.GameEntity
 import play.libs.Akka
 
 import scala.collection.mutable
-import scala.collection.parallel.mutable.ParMap
 
 object LocationA {
 
@@ -13,7 +12,7 @@ object LocationA {
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class LookupEntitiesResult(entities: ParMap[ActorRef, GameEntity], param: AnyRef)
+	case class LookupEntitiesResult(entities: Map[ActorRef, GameEntity], param: AnyRef)
 
 	case class SendMessage[+T](to: GameEntity, msg: T)
 
@@ -30,8 +29,8 @@ object LocationA {
 class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends Actor {
 	import actors.LocationA._
 
-	private var actorsMap = ParMap[ActorRef, GameEntity]()
-	private var entitiesMap = ParMap[GameEntity, ActorRef]()
+	private var actorsMap = Map[ActorRef, GameEntity]()
+	private var entitiesMap = Map[GameEntity, ActorRef]()
 	private var entitiesGridMap = mutable.Map[GameEntity, mutable.Set[GameEntity]]()
 
 	private val grid: Array[Array[mutable.Set[GameEntity]]] =

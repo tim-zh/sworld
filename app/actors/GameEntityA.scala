@@ -5,7 +5,6 @@ import java.util.Random
 import akka.actor.{Cancellable, Actor, ActorRef}
 import models.GameEntity
 
-import scala.collection.parallel.mutable.ParMap
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -71,7 +70,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		location = newLocation
 	}
 
-	def lookAround(entities: ParMap[ActorRef, GameEntity]) {}
+	def lookAround(entities: Map[ActorRef, GameEntity]) {}
 
 	def moveConfirmed(x: Double, y: Double) {
 		entity.x = x
