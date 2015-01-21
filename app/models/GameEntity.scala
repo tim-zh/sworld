@@ -10,7 +10,9 @@ case class GameEntity(id: Long,
 											var location: String,
 											var x: Double,
 											var y: Double,
-											view_radius: Double)
+											view_radius: Double) {
+	override def hashCode(): Int = id.hashCode() //scala 2.11.1 mutable.HashMap/HashSet bug in LocationA.updateGrid - entitiesGridMap.get(entity)
+}
 
 class SlickGameEntity(lTag: lifted.Tag) extends Table[(Long, String, String, String, Double, Double, Double)](lTag, "game_entities") {
 	def id = column[Long]("id", O.PrimaryKey, O.AutoInc)

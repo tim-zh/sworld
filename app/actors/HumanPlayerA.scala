@@ -16,8 +16,8 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
-	override def lookAround(entities: Map[ActorRef, GameEntity]) {
-		val entitiesArr = Json.arr(entities.values.seq.view.filter(_.id != entity.id).
+	override def lookAround(entities: Map[GameEntity, ActorRef]) {
+		val entitiesArr = Json.arr(entities.keys.seq.view.filter(_.id != entity.id).
 				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)).toSeq)
 		out ! Json.obj("entities" -> entitiesArr)
 	}
@@ -57,7 +57,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 		case jsObj: JsObject if jsObj.value contains "say" =>
 			val msg = (jsObj \ "say").as[String]
-			say(msg, 4)
+			say(msg, 50)
 			if (msg == "rise")
 				createGameEntity(GameEntity(generateId(), true, "bot", "bot", entity.location, entity.x, entity.y, 100))
 	}

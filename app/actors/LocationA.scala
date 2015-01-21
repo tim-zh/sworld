@@ -12,7 +12,7 @@ object LocationA {
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class LookupEntitiesResult(entities: Map[ActorRef, GameEntity], param: AnyRef)
+	case class LookupEntitiesResult(entities: Map[GameEntity, ActorRef], param: AnyRef)
 
 	case class SendMessage[+T](to: GameEntity, msg: T)
 
@@ -23,7 +23,7 @@ object LocationA {
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
 
-	def create(name: String, dao: ActorRef) = Akka.system().actorOf(Props(classOf[LocationA], dao), name)
+	def create(name: String, dao: ActorRef, width: Int, height: Int, cellSize: Int) = Akka.system().actorOf(Props(classOf[LocationA], dao, width, height, cellSize), name)
 }
 
 class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends Actor {
@@ -34,8 +34,8 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 	private var entitiesGridMap = mutable.Map[GameEntity, mutable.Set[GameEntity]]()
 
 	private val grid: Array[Array[mutable.Set[GameEntity]]] =
-		for (i <- Array(0 until width / cellSize))
-			yield for (j <- Array(0 until width / cellSize))
+		for (i <- Array.range(0, width))
+			yield for (j <- Array.range(0, height))
 				yield mutable.Set[GameEntity]()
 
 	def receive = {
@@ -71,7 +71,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 
 		case Broadcast(msg, radius) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			filterNearbyEntities((entity.x, entity.y), radius) map { _._1 ! GameEntityA.Listen(entity, msg) }
+			filterNearbyEntities((entity.x, entity.y), radius) map { _._2 ! GameEntityA.Listen(entity, msg) }
 
 		case MoveEntity(x, y) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
@@ -90,17 +90,28 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 
 	def filterNearbyEntities(xy: (Double, Double), radius: Double) =
  		if (radius == -1)
-			actorsMap
- 		else
-			actorsMap filter { entityActor => getDistance(xy, (entityActor._2.x, entityActor._2.y)) <= radius }
+			entitiesMap
+ 		else {
+			val minX = math.max(((xy._1 - radius) / cellSize).toInt, 0)
+			val maxX = math.min(((xy._1 + radius) / cellSize).toInt, width)
+			val minY = math.max(((xy._2 - radius) / cellSize).toInt, 0)
+			val maxY = math.min(((xy._2 + radius) / cellSize).toInt, height)
+			val entitiesSeq: IndexedSeq[GameEntity] = for {
+				x <- minX to maxX
+				y <- minY to maxY
+				entity <- grid(x)(y)
+				if getDistance(xy, (entity.x, entity.y)) <= radius
+			} yield entity
+			(entitiesSeq map { entity => (entity, entitiesMap(entity)) }).toMap
+		}
 
  	def getDistance(xy0: (Double, Double), xy1: (Double, Double)) =
  		Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
 
-	private def isMoveAllowed(x: Double, y: Double, entity: GameEntity) =
+	def isMoveAllowed(x: Double, y: Double, entity: GameEntity) =
 		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10
 
-	private def updateGrid(entity: GameEntity, isLeaving: Boolean = false) {
+	def updateGrid(entity: GameEntity, isLeaving: Boolean = false) {
 		if (isLeaving) {
 			entitiesGridMap.get(entity) foreach { _ -= entity }
 			entitiesGridMap -= entity
@@ -119,10 +130,10 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 		}
 	}
 
-	private def getGridCell(x: Double, y: Double): Option[mutable.Set[GameEntity]] = {
-		val i = (x / width).toInt
-		val j = (y / height).toInt
-		if (i >= 0 && j >= 0 && i < grid.length && j < grid(i).length)
+	def getGridCell(x: Double, y: Double): Option[mutable.Set[GameEntity]] = {
+		val i = (x / cellSize).toInt
+		val j = (y / cellSize).toInt
+		if (i >= 0 && j >= 0 && i < width && j < height)
 			Some(grid(i)(j))
 		else
 			None

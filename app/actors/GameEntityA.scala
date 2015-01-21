@@ -1,7 +1,5 @@
 package actors
 
-import java.util.Random
-
 import akka.actor.{Cancellable, Actor, ActorRef}
 import models.GameEntity
 
@@ -24,11 +22,10 @@ object GameEntityA {
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends Actor {
 	import GameEntityA._
 
-
-	private val random = new Random(System.nanoTime() + hashCode())
+	private var lastTransientId: Long = -1
 	private var lookAroundTick: Cancellable = null
 
-	protected def generateId() = synchronized { random.nextLong() }
+	protected def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
 
 	override def preStart() {
 		location ! LocationA.Enter(entity)
@@ -70,7 +67,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		location = newLocation
 	}
 
-	def lookAround(entities: Map[ActorRef, GameEntity]) {}
+	def lookAround(entities: Map[GameEntity, ActorRef]) {}
 
 	def moveConfirmed(x: Double, y: Double) {
 		entity.x = x
