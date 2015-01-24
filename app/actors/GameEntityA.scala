@@ -3,6 +3,7 @@ package actors
 import akka.actor.{Cancellable, Actor, ActorRef}
 import models.GameEntity
 
+import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -67,7 +68,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		location = newLocation
 	}
 
-	def lookAround(entities: Map[GameEntity, ActorRef]) {}
+	def lookAround(entities: mutable.Map[GameEntity, ActorRef]) {}
 
 	def moveConfirmed(x: Double, y: Double) {
 		entity.x = x

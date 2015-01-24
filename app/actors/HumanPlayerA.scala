@@ -4,6 +4,8 @@ import akka.actor._
 import models.GameEntity
 import play.api.libs.json.{JsBoolean, JsObject, Json}
 
+import scala.collection.mutable
+
 class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 
 	override def preStart() {
@@ -16,7 +18,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
-	override def lookAround(entities: Map[GameEntity, ActorRef]) {
+	override def lookAround(entities: mutable.Map[GameEntity, ActorRef]) {
 		val entitiesArr = Json.arr(entities.keys.seq.view.filter(_.id != entity.id).
 				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)).toSeq)
 		out ! Json.obj("entities" -> entitiesArr)

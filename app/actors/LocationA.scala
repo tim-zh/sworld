@@ -3,6 +3,7 @@ package actors
 import akka.actor._
 import models.GameEntity
 import play.libs.Akka
+import utils.Grid
 
 import scala.collection.mutable
 
@@ -12,7 +13,7 @@ object LocationA {
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class LookupEntitiesResult(entities: Map[GameEntity, ActorRef], param: AnyRef)
+	case class LookupEntitiesResult(entities: mutable.Map[GameEntity, ActorRef], param: AnyRef)
 
 	case class SendMessage[+T](to: GameEntity, msg: T)
 
@@ -30,32 +31,27 @@ object LocationA {
 class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends Actor {
 	import actors.LocationA._
 
-	private var actorsMap = Map[ActorRef, GameEntity]()
-	private var entitiesMap = Map[GameEntity, ActorRef]()
-	private var entitiesGridMap = mutable.Map[GameEntity, mutable.Set[GameEntity]]()
-
-	private val grid: Array[Array[mutable.Set[GameEntity]]] =
-		for (i <- Array.range(0, width))
-			yield for (j <- Array.range(0, height))
-				yield mutable.Set[GameEntity]()
+	private val actorsMap = mutable.Map[ActorRef, GameEntity]()
+	private val entitiesMap = mutable.Map[GameEntity, ActorRef]()
+	private val grid = new Grid(width, height, cellSize)
 
 	def receive = {
 		case Enter(entity) =>
 			actorsMap += (sender -> entity)
 			entitiesMap += (entity -> sender)
-			updateGrid(entity)
+			grid.update(entity)
 			context watch sender
 			sender ! GameEntityA.LocationEntered
 
 		case Leave if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			updateGrid(entity, true)
+			grid.update(entity, true)
 			entitiesMap -= entity
 			actorsMap -= sender
 
 		case Terminated(actor) if actorsMap contains actor =>
 			val entity = actorsMap(actor)
-			updateGrid(entity, true)
+			grid.update(entity, true)
 			entitiesMap -= entity
 			actorsMap -= actor
 
@@ -79,7 +75,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 			if (isMoveAllowed(x, y, entity)) {
 				entity.x = x
 				entity.y = y
-				updateGrid(entity)
+				grid.update(entity)
 				dao ! DaoA.UpdateEntity(entity)
 				sender ! GameEntityA.MoveConfirmed(x, y)
 			} else
@@ -93,50 +89,16 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
  		if (radius == -1)
 			entitiesMap
  		else {
-			val minX = math.max(((xy._1 - radius) / cellSize).toInt, 0)
-			val maxX = math.min(((xy._1 + radius) / cellSize).toInt, width)
-			val minY = math.max(((xy._2 - radius) / cellSize).toInt, 0)
-			val maxY = math.min(((xy._2 + radius) / cellSize).toInt, height)
-			val entitiesSeq: IndexedSeq[GameEntity] = for {
-				x <- minX to maxX
-				y <- minY to maxY
-				entity <- grid(x)(y)
-				if getDistance(xy, (entity.x, entity.y)) <= radius
-			} yield entity
-			(entitiesSeq map { entity => (entity, entitiesMap(entity)) }).toMap
+			val entitiesSeq = grid.getEntities(xy, radius)
+			val mapBuilder = mutable.Map.newBuilder[GameEntity, ActorRef]
+			entitiesSeq.view.filter(e => getSquareDistance(xy, (e.x, e.y)) <= radius * radius).
+					map(entity => (entity, entitiesMap(entity))).foreach(mapBuilder += _)
+			mapBuilder.result()
 		}
 
- 	def getDistance(xy0: (Double, Double), xy1: (Double, Double)) =
- 		Math.sqrt((xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2))
+ 	def getSquareDistance(xy0: (Double, Double), xy1: (Double, Double)) =
+ 		(xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2)
 
 	def isMoveAllowed(x: Double, y: Double, entity: GameEntity) =
 		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10
-
-	def updateGrid(entity: GameEntity, isLeaving: Boolean = false) {
-		if (isLeaving) {
-			entitiesGridMap.get(entity) foreach { _ -= entity }
-			entitiesGridMap -= entity
-			return
-		}
-		val oldCell = entitiesGridMap.get(entity)
-		val newCell = getGridCell(entity.x, entity.y)
-		if (newCell.isDefined) {
-			if (oldCell.isDefined) {
-				if (newCell.get == oldCell.get)
-					return
-				oldCell.get -= entity
-			}
-			newCell.get += entity
-			entitiesGridMap.put(entity, newCell.get)
-		}
-	}
-
-	def getGridCell(x: Double, y: Double): Option[mutable.Set[GameEntity]] = {
-		val i = (x / cellSize).toInt
-		val j = (y / cellSize).toInt
-		if (i >= 0 && j >= 0 && i < width && j < height)
-			Some(grid(i)(j))
-		else
-			None
-	}
 }
