@@ -18,10 +18,12 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
-	override def lookAround(entities: mutable.Map[GameEntity, ActorRef]) {
-		val entitiesArr = Json.arr(entities.keys.seq.view.filter(_.id != entity.id).
-				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)).toSeq)
-		out ! Json.obj("entities" -> entitiesArr)
+	override def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {
+		val entitiesArr = Json.arr(entities.keySet.diff(oldEntities.keySet).withFilter(_.id != entity.id).
+				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)))
+		val goneEntitiesArr = Json.arr(oldEntities.keySet.diff(entities.keySet).withFilter(_.id != entity.id).
+				map(entity => Json.obj("id" -> entity.id, "type" -> entity.eType, "x" -> entity.x, "y" -> entity.y)))
+		out ! Json.obj("entities" -> entitiesArr, "goneEntities" -> goneEntitiesArr)
 	}
 
 	override def moveRejected(x: Double, y: Double) {

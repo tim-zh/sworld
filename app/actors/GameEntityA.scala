@@ -25,6 +25,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 
 	private var lastTransientId: Long = -1
 	private var lookAroundTick: Cancellable = null
+	private var visibleEntitiesMap = mutable.Map[GameEntity, ActorRef]()
 
 	protected def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
 
@@ -43,7 +44,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 			location ! LocationA.LookupEntities(entity.x, entity.y, entity.viewRadius, null)
 
 		case LocationA.LookupEntitiesResult(entities, param) =>
-			lookAround(entities)
+			lookAround(entities, visibleEntitiesMap)
+			visibleEntitiesMap = entities
 			context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
 
 		case MoveConfirmed(x, y) if sender == location =>
@@ -68,7 +70,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		location = newLocation
 	}
 
-	def lookAround(entities: mutable.Map[GameEntity, ActorRef]) {}
+	def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {}
 
 	def moveConfirmed(x: Double, y: Double) {
 		entity.x = x
