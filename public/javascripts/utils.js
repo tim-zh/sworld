@@ -42,7 +42,7 @@ GameObject.prototype.removeMouseOver = function(f) {
 
 var move = function(object, dx, dy) {
 	object.body.setZeroVelocity();
-	if (dx == 0 && dy == 0) {
+	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
 		object.animations.stop();
 		object.frame = 0;
 		object.direction = null;
@@ -70,6 +70,7 @@ var move = function(object, dx, dy) {
 
 var keys;
 var player;
+var entities = [];
 var getPlayer = function(x, y) {
 	if (player)
 		return player;

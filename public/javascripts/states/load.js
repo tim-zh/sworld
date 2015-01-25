@@ -12,6 +12,12 @@ GameStates.Load.prototype = {
 			{ name: 'down_walk', frames: [4, 5, 6, 5], frameRate: 6, loop: true },
 			{ name: 'side_walk', frames: [2, 3], frameRate: 6, loop: true }],
 			directionUp: 'up_walk', directionDown: 'down_walk', directionSide: 'side_walk' };
+		game.load.spritesheet('bot', 'assets/images/sprites/bot.png', 16, 16);
+		animatedSprites['bot'] = { name: 'bot', animations: [
+			{ name: 'up_walk', frames: [3, 4, 5, 4], frameRate: 6, loop: true },
+			{ name: 'down_walk', frames: [0, 1, 2, 1], frameRate: 6, loop: true },
+			{ name: 'side_walk', frames: [6, 7, 8, 7], frameRate: 6, loop: true }],
+			directionUp: 'up_walk', directionDown: 'down_walk', directionSide: 'side_walk' };
 	},
 
 	create: function() {

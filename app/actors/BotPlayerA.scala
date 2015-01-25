@@ -11,6 +11,6 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 
 	override def listen(from: GameEntity, msg: String) {
 		if (from != entity && msg == "hi")
-			say("hi", 4)
+			say("hi", 40)
 	}
 }

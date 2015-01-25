@@ -21,8 +21,17 @@ GameStates.MainGame.prototype = {
 				document.title = msg.newLocation;
 				return;
 			}
-			if (msg.entities) {
-				//todo process entities in view
+			if (msg.newEntities) {
+				msg.newEntities.forEach(function(e) {
+					entities[e.id] = new GameObject(game, 'bot', e.x, e.y, function() {});
+				});
+				msg.changedEntities.forEach(function(e) {
+					move(entities[e.id], e.x - entities[e.id].body.x, e.y - entities[e.id].body.y);
+				});
+				msg.goneEntities.forEach(function(e) {
+					entities[e.id].destroy();
+					delete entities[e.id];
+				});
 				return;
 			}
 			if (msg.move) {
