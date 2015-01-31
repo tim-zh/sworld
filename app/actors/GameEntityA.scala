@@ -11,9 +11,6 @@ object GameEntityA {
 
 	object LocationEntered
 
-	case class MoveConfirmed(x: Double, y: Double)
-	case class MoveRejected(x: Double, y: Double)
-
 	case class Listen(from: GameEntity, msg: String)
 	case class ListenChat(from: GameEntity, msg: String)
 
@@ -44,15 +41,10 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 			location ! LocationA.LookupEntities(entity.x, entity.y, entity.viewRadius, null)
 
 		case LocationA.LookupEntitiesResult(entities, param) =>
-			lookAround(entities, visibleEntitiesMap)
-			visibleEntitiesMap = entities
+			val newEntities = entities.filter(_._1.id != entity.id)
+			lookAround(newEntities, visibleEntitiesMap)
+			visibleEntitiesMap = newEntities.map(e => (e._1.copy(), e._2))
 			context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
-
-		case MoveConfirmed(x, y) if sender == location =>
-			moveConfirmed(x, y)
-
-		case MoveRejected(x, y) if sender == location =>
-			moveRejected(x, y)
 
 		case ListenChat(from, msg) if sender == location =>
 			listenChat(from, msg)
@@ -72,18 +64,6 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 
 	def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {}
 
-	def moveConfirmed(x: Double, y: Double) {
-		entity.dx = x - entity.x
-		entity.dy = y - entity.y
-		entity.x = x
-		entity.y = y
-	}
-
-	def moveRejected(x: Double, y: Double) {
-		entity.x = x
-		entity.y = y
-	}
-
 	def listenChat(from: GameEntity, msg: String) {}
 
 	def listen(from: GameEntity, msg: String) {}
@@ -94,7 +74,16 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 
 	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(msg, radius) }
 
-	def move(x: Double, y: Double) { location ! LocationA.MoveEntity(x, y) }
+	def move(x: Double, y: Double): Boolean = {
+		if (!isMoveAllowed(x, y))
+			return false
+		entity.dx = x - entity.x
+		entity.dy = y - entity.y
+		entity.x = x
+		entity.y = y
+		location ! LocationA.MoveEntity(x, y)
+		true
+	}
 
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity) }
 
@@ -110,9 +99,9 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		val ids = entitiesMap.keySet
 		val oldIds = oldEntitiesMap.keySet
 
-		val newIds = ids.diff(oldIds).filter(_ != entity.id)
+		val newIds = ids.diff(oldIds)
 		val goneIds = oldIds.diff(ids)
-		val restIds = ids.diff(newIds).filter(id => id != entity.id)
+		val restIds = ids.diff(newIds)
 
 		(newIds.map(entitiesMap(_)), goneIds.map(oldEntitiesMap(_)), restIds.map(entitiesMap(_)))
 	}
@@ -122,4 +111,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		val k = entity.maxSpeed / Math.hypot(dx, dy)
 		(dx * k, dy * k)
 	}
+
+	def isMoveAllowed(x: Double, y: Double) =
+		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10
 }

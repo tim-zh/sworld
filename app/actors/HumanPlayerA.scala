@@ -19,6 +19,8 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	override def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {
+		if (entities.isEmpty && oldEntities.isEmpty)
+			return
 		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
 		val (newEntities, goneEntities, restEntities) = getNewGoneRest(entities, oldEntities)
 		val changedEntities = restEntities.filter { e =>
@@ -36,11 +38,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 		if (newEntities.nonEmpty || goneEntities.nonEmpty || changedEntities.nonEmpty)
 			out ! Json.obj("newEntities" -> newEntitiesArr, "changedEntities" -> changedEntitiesArr, "goneEntities" -> goneEntitiesArr)
-	}
-
-	override def moveRejected(x: Double, y: Double) {
-		super.moveRejected(x, y)
-		out ! Json.obj("move" -> Json.obj("x" -> x, "y" -> y))
 	}
 
 	override def listenChat(from: GameEntity, msg: String) {
@@ -65,7 +62,8 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		case jsObj: JsObject if jsObj.value contains "move" =>
 			val newX = (jsObj \ "move" \ "x").as[Double]
 			val newY = (jsObj \ "move" \ "y").as[Double]
-			move(newX, newY)
+			if (!move(newX, newY))
+				out ! Json.obj("move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 
 		case jsObj: JsObject if jsObj.value contains "chat" =>
 			val msg = (jsObj \ "chat").as[String]

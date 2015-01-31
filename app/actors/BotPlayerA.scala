@@ -18,7 +18,7 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 
 	override def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {
 		val player = entities.find(_._1.eType == "player").map(_._1)
-		if (player.isDefined) {
+		if (player.isDefined && Math.hypot(entity.x - player.get.x, entity.y - player.get.y) > entity.maxSpeed) {
 			val (dx, dy) = getVelocityVectorTo(player.get.x, player.get.y)
 			move(entity.x + dx, entity.y + dy)
 		}

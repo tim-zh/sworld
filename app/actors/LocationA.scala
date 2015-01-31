@@ -13,7 +13,7 @@ object LocationA {
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class LookupEntitiesResult(entities: mutable.Map[GameEntity, ActorRef], param: AnyRef)
+	case class LookupEntitiesResult(entities: mutable.Map[GameEntity, ActorRef], param: AnyRef) //todo immutable messages
 
 	case class Notify[+T](to: GameEntity, msg: T)
 	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
@@ -76,16 +76,13 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 
 		case MoveEntity(x, y) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			if (isMoveAllowed(x, y, entity)) {
-				entity.dx = x - entity.x
-				entity.dy = y - entity.y
-				entity.x = x
-				entity.y = y
-				grid.update(entity)
+			entity.dx = x - entity.x
+			entity.dy = y - entity.y
+			entity.x = x
+			entity.y = y
+			grid.update(entity)
+			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity)
-				sender ! GameEntityA.MoveConfirmed(x, y)
-			} else
-				sender ! GameEntityA.MoveRejected(entity.x, entity.y)
 
 		case LocationA.CreateEntity(clazz, entity) =>
 			Akka.system().actorOf(Props(clazz, self, entity))
@@ -97,14 +94,9 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
  		else {
 			val entitiesSeq = grid.getEntities(x, y, radius)
 			val mapBuilder = mutable.Map.newBuilder[GameEntity, ActorRef]
-			entitiesSeq.view.filter(e => getSquareDistance((x, y), (e.x, e.y)) <= radius * radius).
-					map(entity => (entity, entitiesMap(entity))).foreach(mapBuilder += _)
+			entitiesSeq.view.filter(e => Math.hypot(x - e.x, y - e.y) <= radius).
+					map(entity => (entity, entitiesMap(entity))).
+					foreach(mapBuilder += _)
 			mapBuilder.result()
 		}
-
- 	def getSquareDistance(xy0: (Double, Double), xy1: (Double, Double)) =
- 		(xy0._1 - xy1._1) * (xy0._1 - xy1._1) + (xy0._2 - xy1._2) * (xy0._2 - xy1._2)
-
-	def isMoveAllowed(x: Double, y: Double, entity: GameEntity) =
-		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10
 }
