@@ -15,7 +15,8 @@ object LocationA {
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
 	case class LookupEntitiesResult(entities: mutable.Map[GameEntity, ActorRef], param: AnyRef)
 
-	case class SendMessage[+T](to: GameEntity, msg: T)
+	case class Notify[+T](to: GameEntity, msg: T)
+	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
 
 	case class CreateEntity(clazz: Class[_], entity: GameEntity)
 
@@ -55,11 +56,14 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 			entitiesMap -= entity
 			actorsMap -= actor
 
-		case SendMessage(to, msg) =>
+		case Notify(to, msg) =>
 			entitiesMap.get(to) foreach { _ forward msg }
 
+		case NotifyArea(x, y, radius, msg) =>
+			filterNearbyEntities(x, y, radius) foreach { _._2 forward msg }
+
 		case LookupEntities(x, y, radius, param) =>
-			val filtered = filterNearbyEntities((x, y), radius)
+			val filtered = filterNearbyEntities(x, y, radius)
 			sender ! LookupEntitiesResult(filtered, param)
 
 		case BroadcastChat(msg) if actorsMap contains sender =>
@@ -68,7 +72,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 
 		case Broadcast(msg, radius) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			filterNearbyEntities((entity.x, entity.y), radius) map { _._2 ! GameEntityA.Listen(entity, msg) }
+			filterNearbyEntities(entity.x, entity.y, radius) foreach { _._2 ! GameEntityA.Listen(entity, msg) }
 
 		case MoveEntity(x, y) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
@@ -87,13 +91,13 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 			Akka.system().actorOf(Props(clazz, self, entity))
 	}
 
-	def filterNearbyEntities(xy: (Double, Double), radius: Double) =
+	def filterNearbyEntities(x: Double, y: Double, radius: Double) =
  		if (radius == -1)
 			entitiesMap
  		else {
-			val entitiesSeq = grid.getEntities(xy, radius)
+			val entitiesSeq = grid.getEntities(x, y, radius)
 			val mapBuilder = mutable.Map.newBuilder[GameEntity, ActorRef]
-			entitiesSeq.view.filter(e => getSquareDistance(xy, (e.x, e.y)) <= radius * radius).
+			entitiesSeq.view.filter(e => getSquareDistance((x, y), (e.x, e.y)) <= radius * radius).
 					map(entity => (entity, entitiesMap(entity))).foreach(mapBuilder += _)
 			mapBuilder.result()
 		}

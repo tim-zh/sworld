@@ -58,6 +58,6 @@ class Grid(width: Int, height: Int, cellSize: Int) {
 		}
  	}
 
-	def getEntities(xy: (Double, Double), radius: Double, filter: GameEntity => Boolean = e => true): IndexedSeq[GameEntity] =
-		getCells(xy._1, xy._2, radius).flatten.filter(filter)
+	def getEntities(x: Double, y: Double, radius: Double, filter: GameEntity => Boolean = e => true): IndexedSeq[GameEntity] =
+		getCells(x, y, radius).flatten.filter(filter)
 }
