@@ -73,6 +73,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 	def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {}
 
 	def moveConfirmed(x: Double, y: Double) {
+		entity.dx = x - entity.x
+		entity.dy = y - entity.y
 		entity.x = x
 		entity.y = y
 	}
@@ -99,5 +101,25 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 	def createGameEntity(entity: GameEntity) = entity.name match {
 		case "bot" =>
 			location ! LocationA.CreateEntity(classOf[BotPlayerA], entity)
+	}
+
+	def getNewGoneRest(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) = {
+		val entitiesMap = entities.map(e => (e._1.id, e._1))
+		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
+
+		val ids = entitiesMap.keySet
+		val oldIds = oldEntitiesMap.keySet
+
+		val newIds = ids.diff(oldIds).filter(_ != entity.id)
+		val goneIds = oldIds.diff(ids)
+		val restIds = ids.diff(newIds).filter(id => id != entity.id)
+
+		(newIds.map(entitiesMap(_)), goneIds.map(oldEntitiesMap(_)), restIds.map(entitiesMap(_)))
+	}
+
+	def getVelocityVectorTo(x: Double, y: Double) = {
+		val (dx, dy) = (x - entity.x, y - entity.y)
+		val k = entity.maxSpeed / Math.hypot(dx, dy)
+		(dx * k, dy * k)
 	}
 }

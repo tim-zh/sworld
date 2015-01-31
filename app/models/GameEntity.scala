@@ -11,7 +11,9 @@ case class GameEntity(id: Long,
 											var x: Double,
 											var y: Double,
 											viewRadius: Double,
-											maxSpeed: Double) {
+											maxSpeed: Double,
+											var dx: Double = 0,
+											var dy: Double = 0) {
 	override def hashCode(): Int = id.hashCode() //scala 2.11.1 mutable.HashMap/HashSet bug in LocationA.updateGrid - entitiesGridMap.get(entity)
 }
 

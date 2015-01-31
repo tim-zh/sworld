@@ -58,7 +58,7 @@ object DaoImpl extends Dao {
 		queryGetEntityFieldsById(id).update((eType, name, location, x, y, viewRadius, maxSpeed)) == 1 }
 
 
-	private def convertUser(d: (Long, Long, String, String, Long)) = User(d._1, d._2, d._3, d._4, d._5)
+	private def convertUser(d: (Long, Long, String, String, Long)) = User.tupled(d)
 
 	private def convertEntity(d: (Long, String, String, String, Double, Double, Double, Double)) = GameEntity(d._1, false, d._2, d._3, d._4, d._5, d._6, d._7, d._8)
 }

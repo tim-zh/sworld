@@ -19,30 +19,23 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	override def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {
-		val entitiesMap = entities.map(e => (e._1.id, e._1))
 		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
+		val (newEntities, goneEntities, restEntities) = getNewGoneRest(entities, oldEntities)
+		val changedEntities = restEntities.filter { e =>
+			Math.abs(e.x - oldEntitiesMap(e.id).x) >= 1 || Math.abs(e.y - oldEntitiesMap(e.id).y) >= 1 }
 
-		val ids = entitiesMap.keySet
-		val oldIds = oldEntitiesMap.keySet
-
-		val newIds = ids.diff(oldIds).filter(_ != entity.id)
-		val goneIds = oldIds.diff(ids)
-		val changedIds = ids.diff(newIds).filter(id =>
-			id != entity.id && (Math.abs(entitiesMap(id).x - oldEntitiesMap(id).x) >= 1 || Math.abs(entitiesMap(id).y - oldEntitiesMap(id).y) >= 1))
-		val newEntitiesArr = Json.toJson(newIds map { id =>
-			val e = entitiesMap(id)
-			Json.obj("id" -> id, "x" -> e.x, "y" -> e.y, "type" -> e.eType)
+		val newEntitiesArr = Json.toJson(newEntities map { e =>
+			Json.obj("id" -> e.id, "x" -> e.x, "y" -> e.y, "type" -> e.eType)
 		})
-		val goneEntitiesArr = Json.toJson(goneIds map { id =>
-			val e = oldEntitiesMap(id)
-			Json.obj("id" -> id, "x" -> e.x, "y" -> e.y, "type" -> e.eType)
+		val goneEntitiesArr = Json.toJson(goneEntities map { e =>
+			Json.obj("id" -> e.id, "x" -> e.x, "y" -> e.y, "type" -> e.eType)
 		})
-		val changedEntitiesArr = Json.toJson(changedIds map { id =>
-			val e = entitiesMap(id)
-			Json.obj("id" -> id, "x" -> e.x, "y" -> e.y)
+		val changedEntitiesArr = Json.toJson(changedEntities.map { e =>
+			Json.obj("id" -> e.id, "x" -> e.x, "y" -> e.y)
 		})
 
-		out ! Json.obj("newEntities" -> newEntitiesArr, "changedEntities" -> changedEntitiesArr, "goneEntities" -> goneEntitiesArr)
+		if (newEntities.nonEmpty || goneEntities.nonEmpty || changedEntities.nonEmpty)
+			out ! Json.obj("newEntities" -> newEntitiesArr, "changedEntities" -> changedEntitiesArr, "goneEntities" -> goneEntitiesArr)
 	}
 
 	override def moveRejected(x: Double, y: Double) {
@@ -82,6 +75,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			val msg = (jsObj \ "say").as[String]
 			say(msg, 50)
 			if (msg == "rise")
-				createGameEntity(GameEntity(generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 50))
+				createGameEntity(GameEntity(generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 10))
 	}
 }

@@ -73,6 +73,8 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 		case MoveEntity(x, y) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
 			if (isMoveAllowed(x, y, entity)) {
+				entity.dx = x - entity.x
+				entity.dy = y - entity.y
 				entity.x = x
 				entity.y = y
 				grid.update(entity)
