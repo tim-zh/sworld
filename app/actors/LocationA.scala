@@ -5,15 +5,13 @@ import models.GameEntity
 import play.libs.Akka
 import utils.Grid
 
-import scala.collection.mutable
-
 object LocationA {
 
 	case class Enter(entity: GameEntity)
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class LookupEntitiesResult(entities: mutable.Map[GameEntity, ActorRef], param: AnyRef) //todo immutable messages
+	case class LookupEntitiesResult(entities: Map[GameEntity, ActorRef], param: AnyRef)
 
 	case class Notify[+T](to: GameEntity, msg: T)
 	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
@@ -32,8 +30,8 @@ object LocationA {
 class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends Actor {
 	import actors.LocationA._
 
-	private val actorsMap = mutable.Map[ActorRef, GameEntity]()
-	private val entitiesMap = mutable.Map[GameEntity, ActorRef]()
+	private var actorsMap = Map[ActorRef, GameEntity]()
+	private var entitiesMap = Map[GameEntity, ActorRef]()
 	private val grid = new Grid(width, height, cellSize)
 
 	def receive = {
@@ -41,6 +39,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 			actorsMap += (sender -> entity)
 			entitiesMap += (entity -> sender)
 			grid.update(entity)
+			entity.location = self.path.name
 			context watch sender
 			sender ! GameEntityA.LocationEntered
 
@@ -68,11 +67,11 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 
 		case BroadcastChat(msg) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			actorsMap foreach { _._1 ! GameEntityA.ListenChat(entity, msg) }
+			actorsMap foreach { _._1 ! GameEntityA.ListenChat(entity.copy(), msg) }
 
 		case Broadcast(msg, radius) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			filterNearbyEntities(entity.x, entity.y, radius) foreach { _._2 ! GameEntityA.Listen(entity, msg) }
+			filterNearbyEntities(entity.x, entity.y, radius) foreach { _._2 ! GameEntityA.Listen(entity.copy(), msg) }
 
 		case MoveEntity(x, y) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
@@ -82,21 +81,18 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends A
 			entity.y = y
 			grid.update(entity)
 			if (!entity.transient)
-				dao ! DaoA.UpdateEntity(entity)
+				dao ! DaoA.UpdateEntity(entity.copy())
 
 		case LocationA.CreateEntity(clazz, entity) =>
 			Akka.system().actorOf(Props(clazz, self, entity))
 	}
 
-	def filterNearbyEntities(x: Double, y: Double, radius: Double) =
+	def filterNearbyEntities(x: Double, y: Double, radius: Double): Map[GameEntity, ActorRef] =
  		if (radius == -1)
-			entitiesMap
+			entitiesMap.map(e => (e._1.copy(), e._2))
  		else {
 			val entitiesSeq = grid.getEntities(x, y, radius)
-			val mapBuilder = mutable.Map.newBuilder[GameEntity, ActorRef]
 			entitiesSeq.view.filter(e => Math.hypot(x - e.x, y - e.y) <= radius).
-					map(entity => (entity, entitiesMap(entity))).
-					foreach(mapBuilder += _)
-			mapBuilder.result()
+					map(e => (e.copy(), entitiesMap(e))).toMap
 		}
 }

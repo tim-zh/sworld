@@ -4,8 +4,6 @@ import akka.actor._
 import models.GameEntity
 import play.api.libs.json.{JsBoolean, JsObject, Json}
 
-import scala.collection.mutable
-
 class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 
 	override def preStart() {
@@ -18,7 +16,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 	}
 
-	override def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {
+	override def lookAround(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) {
 		if (entities.isEmpty && oldEntities.isEmpty)
 			return
 		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
@@ -73,6 +71,6 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			val msg = (jsObj \ "say").as[String]
 			say(msg, 50)
 			if (msg == "rise")
-				createGameEntity(GameEntity(generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 10))
+				createGameEntity(GameEntity(GameEntityA.generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 10))
 	}
 }

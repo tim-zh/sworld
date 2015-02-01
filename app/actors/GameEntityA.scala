@@ -3,7 +3,6 @@ package actors
 import akka.actor.{Cancellable, Actor, ActorRef}
 import models.GameEntity
 
-import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -15,19 +14,20 @@ object GameEntityA {
 	case class ListenChat(from: GameEntity, msg: String)
 
 	private object LookAround
+
+	private var lastTransientId: Long = -1
+
+	def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
 }
 
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends Actor {
 	import GameEntityA._
 
-	private var lastTransientId: Long = -1
 	private var lookAroundTick: Cancellable = null
-	private var visibleEntitiesMap = mutable.Map[GameEntity, ActorRef]()
-
-	protected def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
+	private var visibleEntitiesMap = Map[GameEntity, ActorRef]()
 
 	override def preStart() {
-		location ! LocationA.Enter(entity)
+		location ! LocationA.Enter(entity.copy())
 	}
 
 	override def receive = {
@@ -43,7 +43,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		case LocationA.LookupEntitiesResult(entities, param) =>
 			val newEntities = entities.filter(_._1.id != entity.id)
 			lookAround(newEntities, visibleEntitiesMap)
-			visibleEntitiesMap = newEntities.map(e => (e._1.copy(), e._2))
+			visibleEntitiesMap = newEntities
 			context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
 
 		case ListenChat(from, msg) if sender == location =>
@@ -60,9 +60,10 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		if (location != newLocation)
 			location ! LocationA.Leave
 		location = newLocation
+		entity.location = location.path.name
 	}
 
-	def lookAround(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) {}
+	def lookAround(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) {}
 
 	def listenChat(from: GameEntity, msg: String) {}
 
@@ -85,14 +86,14 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends A
 		true
 	}
 
-	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity) }
+	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy()) }
 
 	def createGameEntity(entity: GameEntity) = entity.name match {
 		case "bot" =>
 			location ! LocationA.CreateEntity(classOf[BotPlayerA], entity)
 	}
 
-	def getNewGoneRest(entities: mutable.Map[GameEntity, ActorRef], oldEntities: mutable.Map[GameEntity, ActorRef]) = {
+	def getNewGoneRest(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) = {
 		val entitiesMap = entities.map(e => (e._1.id, e._1))
 		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
 
