@@ -11,7 +11,7 @@ GameStates.MainGame.prototype = {
 		map.addTilesetImage('tiles');
 		var layer = map.createLayer('Tile Layer 1');
 		layer.resizeWorld();
-		map.setCollisionBetween(1, 12);
+		map.setCollisionBetween(1, 25);
 		game.physics.p2.convertTilemap(map, layer);
 		game.physics.p2.setBoundsToWorld(true, true, true, true, false);
 
