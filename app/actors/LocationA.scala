@@ -27,7 +27,7 @@ object LocationA {
 		Akka.system().actorOf(Props(classOf[LocationA], dao, width, height, cellSize), name)
 }
 
-class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends Actor {
+class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends ReceiveLoggerA {
 	import actors.LocationA._
 
 	private var actorsMap = Map[ActorRef, GameEntity]()

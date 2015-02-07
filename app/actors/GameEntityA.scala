@@ -20,7 +20,7 @@ object GameEntityA {
 	def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
 }
 
-abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends Actor {
+abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends ReceiveLoggerA {
 	import GameEntityA._
 
 	private var lookAroundTick: Cancellable = null
