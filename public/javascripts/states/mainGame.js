@@ -24,13 +24,22 @@ GameStates.MainGame.prototype = {
 			if (msg.newEntities) {
 				msg.newEntities.forEach(function(e) {
 					entities[e.id] = new GameObject(game, 'bot', e.x, e.y, function() {});
-				});
-				msg.changedEntities.forEach(function(e) {
-					move(entities[e.id], e.x - entities[e.id].body.x, e.y - entities[e.id].body.y);
+					entities[e.id].previousX = e.x;
+					entities[e.id].previousY = e.y;
 				});
 				msg.goneEntities.forEach(function(e) {
 					entities[e.id].destroy();
 					delete entities[e.id];
+				});
+				msg.changedEntities.forEach(function(e) {
+					moveAt(entities[e.id], e.x, e.y, entities[e.id].previousX, entities[e.id].previousY);
+					entities[e.id].body.moveLeft(e.x - entities[e.id].previousX);
+					entities[e.id].body.moveDown(e.y - entities[e.id].previousY);
+					entities[e.id].previousX = e.x;
+					entities[e.id].previousY = e.y;
+				});
+				msg.unchangedEntities.forEach(function(e) {
+					entities[e.id].body.setZeroVelocity();
 				});
 				return;
 			}

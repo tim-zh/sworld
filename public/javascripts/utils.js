@@ -40,17 +40,13 @@ GameObject.prototype.removeMouseOver = function(f) {
 	this.events.onInputOver.remove(f, this);
 };
 
-var move = function(object, dx, dy) {
-	object.body.setZeroVelocity();
+var updateAnimation = function(object, dx, dy) {
 	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
 		object.animations.stop();
 		object.frame = 0;
 		object.direction = null;
 		return;
 	}
-
-	object.body.moveDown(dy);
-	object.body.moveRight(dx);
 
 	var direction;
 	if (Math.abs(dx) < Math.abs(dy)) {
@@ -66,6 +62,20 @@ var move = function(object, dx, dy) {
 		object.direction = direction;
 		object.animations.play(direction);
 	}
+};
+
+var move = function(object, dx, dy) {
+	updateAnimation(object, dx, dy);
+	object.body.setZeroVelocity();
+	object.body.moveRight(dx);
+	object.body.moveDown(dy);
+};
+
+var moveAt = function(object, x, y, oldX, oldY) {
+	updateAnimation(object, x - oldX, y - oldY);
+	object.body.setZeroVelocity();
+	object.body.x = x;
+	object.body.y = y;
 };
 
 var keys;
@@ -88,8 +98,13 @@ var getPlayer = function(x, y) {
 		move(this, dx, dy);
 		if (dx != 0 || dy !=0)
 			sendMessage({ move: { x: this.body.x, y: this.body.y } });
+		else if (!player.stopped) {
+			player.stopped = true;
+			sendMessage({ move: { x: this.body.x, y: this.body.y } });
+		}
 	};
 	player = new GameObject(game, 'char', x, y, onUpdate);
+	player.stopped = true;
 	game.camera.follow(player);
 	return player;
 };

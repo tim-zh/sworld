@@ -1,6 +1,6 @@
 package actors
 
-import akka.actor.{Cancellable, Actor, ActorRef}
+import akka.actor.{ActorRef, Cancellable}
 import models.GameEntity
 
 import scala.concurrent.duration._
@@ -25,9 +25,11 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	private var lookAroundTick: Cancellable = null
 	private var visibleEntitiesMap = Map[GameEntity, ActorRef]()
+	private var lastMoveTime: Long = _
 
 	override def preStart() {
 		location ! LocationA.Enter(entity.copy())
+		lastMoveTime = System.currentTimeMillis()
 	}
 
 	override def receive = {
@@ -75,6 +77,18 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(msg, radius) }
 
+	def moveTo(x: Double, y: Double): Boolean = {
+		val dt = System.currentTimeMillis() - lastMoveTime
+		lastMoveTime += dt
+		val k = dt * entity.maxSpeed / 1000
+		var (dx, dy) = getVelocityVectorTo(x, y)
+		dx *= k
+		dy *= k
+		val newX = if (Math.abs(dx) >= Math.abs(x - entity.x)) x else entity.x + dx
+		val newY = if (Math.abs(dy) >= Math.abs(y - entity.y)) y else entity.y + dy
+		move(newX, newY)
+	}
+
 	def move(x: Double, y: Double): Boolean = {
 		if (!isMoveAllowed(x, y))
 			return false
@@ -107,12 +121,14 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 		(newIds.map(entitiesMap(_)), goneIds.map(oldEntitiesMap(_)), restIds.map(entitiesMap(_)))
 	}
 
-	def getVelocityVectorTo(x: Double, y: Double) = {
+	def getVelocityVectorTo(x: Double, y: Double): (Double, Double) = {
 		val (dx, dy) = (x - entity.x, y - entity.y)
+		if (dx == 0 && dy == 0)
+			return (0, 0)
 		val k = entity.maxSpeed / Math.hypot(dx, dy)
 		(dx * k, dy * k)
 	}
 
 	def isMoveAllowed(x: Double, y: Double) =
-		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.abs(entity.x - x) <= 10 && Math.abs(entity.y - y) <= 10
+		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.hypot(entity.x - x, entity.y - y) <= entity.maxSpeed * 1.5
 }

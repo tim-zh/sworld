@@ -21,7 +21,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			return
 		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
 		val (newEntities, goneEntities, restEntities) = getNewGoneRest(entities, oldEntities)
-		val changedEntities = restEntities.filter { e =>
+		val (changedEntities, unchangedEntities) = restEntities.partition { e =>
 			Math.abs(e.x - oldEntitiesMap(e.id).x) >= 1 || Math.abs(e.y - oldEntitiesMap(e.id).y) >= 1 }
 
 		val newEntitiesArr = Json.toJson(newEntities map { e =>
@@ -33,9 +33,16 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		val changedEntitiesArr = Json.toJson(changedEntities.map { e =>
 			Json.obj("id" -> e.id, "x" -> e.x, "y" -> e.y)
 		})
+		val unchangedEntitiesArr = Json.toJson(unchangedEntities.map { e =>
+			Json.obj("id" -> e.id)
+		})
 
-		if (newEntities.nonEmpty || goneEntities.nonEmpty || changedEntities.nonEmpty)
-			out ! Json.obj("newEntities" -> newEntitiesArr, "changedEntities" -> changedEntitiesArr, "goneEntities" -> goneEntitiesArr)
+		if (newEntities.nonEmpty || goneEntities.nonEmpty || changedEntities.nonEmpty || unchangedEntities.nonEmpty)
+			out ! Json.obj(
+				"newEntities" -> newEntitiesArr,
+				"changedEntities" -> changedEntitiesArr,
+				"goneEntities" -> goneEntitiesArr,
+				"unchangedEntities" -> unchangedEntitiesArr)
 	}
 
 	override def listenChat(from: GameEntity, msg: String) {
@@ -60,7 +67,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		case jsObj: JsObject if jsObj.value contains "move" =>
 			val newX = (jsObj \ "move" \ "x").as[Double]
 			val newY = (jsObj \ "move" \ "y").as[Double]
-			if (!move(newX, newY))
+			if (!moveTo(newX, newY))
 				out ! Json.obj("move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 
 		case jsObj: JsObject if jsObj.value contains "chat" =>
