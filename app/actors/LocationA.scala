@@ -18,7 +18,9 @@ object LocationA {
 
 	case class CreateEntity(clazz: Class[_], entity: GameEntity)
 
-	case class MoveEntity(x: Double, y: Double)
+	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0) {
+		def this(entity: GameEntity) = this(entity.x, entity.y, entity.dx, entity.dy)
+	}
 
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
@@ -73,12 +75,12 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			val entity = actorsMap(sender)
 			filterNearbyEntities(entity.x, entity.y, radius) foreach { _._2 ! GameEntityA.Listen(entity.copy(), msg) }
 
-		case MoveEntity(x, y) if actorsMap contains sender =>
+		case MoveEntity(x, y, dx, dy) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			entity.dx = x - entity.x
-			entity.dy = y - entity.y
 			entity.x = x
 			entity.y = y
+			entity.dx = dx
+			entity.dy = dy
 			grid.update(entity)
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())

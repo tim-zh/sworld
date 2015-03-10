@@ -1,12 +1,10 @@
 import org.h2.tools.Server
-import play.api._
-import play.api.Application
-import play.api.libs.concurrent.Akka
-import play.api.mvc._
+import play.api.{Application, _}
 import play.api.mvc.Results._
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.Future
+import play.api.mvc._
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object Global extends GlobalSettings {
   private var h2Console: Server = _
@@ -18,9 +16,9 @@ object Global extends GlobalSettings {
 
   override def onStart(app: Application) {
     h2Console = Server.createWebServer("-webPort", "7890").start()
-    Akka.system(app).scheduler.schedule(0.seconds, app.configuration.getInt("mem.monitor.interval").getOrElse(30).seconds) {
+    /*Akka.system(app).scheduler.schedule(0.seconds, app.configuration.getInt("mem.monitor.interval").getOrElse(30).seconds) {
       Logger.info("free memory: " + Runtime.getRuntime.freeMemory / 1024 / 1024 + " Mb")
-    }
+    }*/
   }
 
   override def onStop(app: Application) {

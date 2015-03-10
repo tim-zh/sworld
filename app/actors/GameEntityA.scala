@@ -2,9 +2,10 @@ package actors
 
 import akka.actor.{ActorRef, Cancellable}
 import models.GameEntity
+import utils.Utils
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 object GameEntityA {
 
@@ -21,15 +22,15 @@ object GameEntityA {
 }
 
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends ReceiveLoggerA {
-	import GameEntityA._
+	import actors.GameEntityA._
 
 	private var lookAroundTick: Cancellable = null
 	private var visibleEntitiesMap = Map[GameEntity, ActorRef]()
-	private var lastMoveTime: Long = _
+
+	protected val lookAroundInterval = 100
 
 	override def preStart() {
 		location ! LocationA.Enter(entity.copy())
-		lastMoveTime = System.currentTimeMillis()
 	}
 
 	override def receive = {
@@ -37,7 +38,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 			if (lookAroundTick != null)
 				lookAroundTick.cancel()
 			locationEntered(sender)
-			lookAroundTick = context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
+			lookAroundTick = context.system.scheduler.scheduleOnce(lookAroundInterval.milliseconds, self, LookAround)
 
 		case LookAround =>
 			location ! LocationA.LookupEntities(entity.x, entity.y, entity.viewRadius, null)
@@ -46,7 +47,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 			val newEntities = entities.filter(_._1.id != entity.id)
 			lookAround(newEntities, visibleEntitiesMap)
 			visibleEntitiesMap = newEntities
-			context.system.scheduler.scheduleOnce(100 milliseconds, self, LookAround)
+			context.system.scheduler.scheduleOnce(lookAroundInterval.milliseconds, self, LookAround)
 
 		case ListenChat(from, msg) if sender == location =>
 			listenChat(from, msg)
@@ -77,27 +78,13 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(msg, radius) }
 
-	def moveTo(x: Double, y: Double): Boolean = {
-		val dt = System.currentTimeMillis() - lastMoveTime
-		lastMoveTime += dt
-		val k = dt * entity.maxSpeed / 1000
-		var (dx, dy) = getVelocityVectorTo(x, y)
-		dx *= k
-		dy *= k
-		val newX = if (Math.abs(dx) >= Math.abs(x - entity.x)) x else entity.x + dx
-		val newY = if (Math.abs(dy) >= Math.abs(y - entity.y)) y else entity.y + dy
-		move(newX, newY)
-	}
-
-	def move(x: Double, y: Double): Boolean = {
-		if (!isMoveAllowed(x, y))
-			return false
-		entity.dx = x - entity.x
-		entity.dy = y - entity.y
+	def setPositionAndVelocity(x: Double, y: Double) {
+		val (dx, dy) = Utils.getVelocityVectorTo(entity, x, y)
 		entity.x = x
 		entity.y = y
-		location ! LocationA.MoveEntity(x, y)
-		true
+		entity.dx = dx
+		entity.dy = dy
+		location ! LocationA.MoveEntity(x, y, dx, dy)
 	}
 
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy()) }
@@ -121,14 +108,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 		(newIds.map(entitiesMap(_)), goneIds.map(oldEntitiesMap(_)), restIds.map(entitiesMap(_)))
 	}
 
-	def getVelocityVectorTo(x: Double, y: Double): (Double, Double) = {
-		val (dx, dy) = (x - entity.x, y - entity.y)
-		if (dx == 0 && dy == 0)
-			return (0, 0)
-		val k = entity.maxSpeed / Math.hypot(dx, dy)
-		(dx * k, dy * k)
-	}
-
-	def isMoveAllowed(x: Double, y: Double) =
-		0 <= x && x <= 500 && 0 <= y && y <= 500 && Math.hypot(entity.x - x, entity.y - y) <= entity.maxSpeed * 1.5
+	def isMoveAllowed(x: Double, y: Double, dtInMillis: Long) =
+		0 <= x && x <= 500 && 0 <= y && y <= 500 &&
+				Math.abs(entity.x - x) <= entity.maxSpeed * dtInMillis * 1.5 / 1000 &&
+				Math.abs(entity.y - y) <= entity.maxSpeed * dtInMillis * 1.5 / 1000
 }

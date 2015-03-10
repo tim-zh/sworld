@@ -1,12 +1,12 @@
 var GameObject = function(game, img, x, y, onUpdate) {
 	var animatedSprite = animatedSprites[img];
 	Phaser.Sprite.call(this, game, x, y, animatedSprite.name);
-	game.physics.p2.enable(this);
+	game.physics.arcade.enable(this);
 	this.inputEnabled = true;
 	this.smoothed = false;
 	//this.scale.set(4);
-	this.body.damping = 0.95;
-	this.body.fixedRotation = true;
+	this.body.allowRotation = false;
+	this.body.collideWorldBounds = true;
 	var a = animatedSprite.animations;
 	for (var i in a)
 		if (a.hasOwnProperty(i))
@@ -21,30 +21,21 @@ var GameObject = function(game, img, x, y, onUpdate) {
 GameObject.prototype = Object.create(Phaser.Sprite.prototype);
 GameObject.prototype.constructor = GameObject;
 //call in create()
-//f(body)
-GameObject.prototype.addCollisionCallback = function(f) {
-	this.body.onBeginContact.add(f, this);
-};
-//call in create()
 //f()
-GameObject.prototype.addMouseDown = function(f) {
-	this.events.onInputDown.add(f, this);
-};
-GameObject.prototype.addMouseOver = function(f) {
-	this.events.onInputOver.add(f, this);
-};
-GameObject.prototype.removeMouseDown = function(f) {
-	this.events.onInputDown.remove(f, this);
-};
-GameObject.prototype.removeMouseOver = function(f) {
-	this.events.onInputOver.remove(f, this);
+GameObject.prototype.addMouseDown = function(f) { this.events.onInputDown.add(f, this); };
+GameObject.prototype.addMouseOver = function(f) { this.events.onInputOver.add(f, this); };
+GameObject.prototype.removeMouseDown = function(f) { this.events.onInputDown.remove(f, this); };
+GameObject.prototype.removeMouseOver = function(f) { this.events.onInputOver.remove(f, this); };
+
+var stopAnimation = function(object) {
+	object.animations.stop();
+	object.frame = 0;
+	object.direction = null;
 };
 
 var updateAnimation = function(object, dx, dy) {
 	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
-		object.animations.stop();
-		object.frame = 0;
-		object.direction = null;
+		stopAnimation(object);
 		return;
 	}
 
@@ -64,18 +55,16 @@ var updateAnimation = function(object, dx, dy) {
 	}
 };
 
-var move = function(object, dx, dy) {
-	updateAnimation(object, dx, dy);
-	object.body.setZeroVelocity();
-	object.body.moveRight(dx);
-	object.body.moveDown(dy);
-};
-
-var moveAt = function(object, x, y, oldX, oldY) {
-	updateAnimation(object, x - oldX, y - oldY);
-	object.body.setZeroVelocity();
-	object.body.x = x;
-	object.body.y = y;
+var moveAt = function(object, x, y) {
+	object.body.velocity.set(0);
+	if (object.x = x)
+		object.body.prev.x = x;
+	else
+		object.x = x;
+	if (object.y = y)
+		object.body.prev.y = y;
+	else
+		object.y = y;
 };
 
 var keys;
@@ -95,12 +84,18 @@ var getPlayer = function(x, y) {
 			dx = -playerMaxSpeed;
 		else if (keys.right.isDown)
 			dx = playerMaxSpeed;
-		move(this, dx, dy);
-		if (dx != 0 || dy !=0)
-			sendMessage({ move: { x: this.body.x, y: this.body.y } });
-		else if (!player.stopped) {
+
+		updateAnimation(player, dx, dy);
+		player.body.velocity.set(dx, dy);
+
+		if (dx != 0 || dy !=0) {
+			if (player.stopped)
+				sendMessage({move: {x: this.x, y: this.y}});
+			player.stopped = false;
+			sendMessage({move: {x: this.x, y: this.y}});
+		} else if (!player.stopped) {
 			player.stopped = true;
-			sendMessage({ move: { x: this.body.x, y: this.body.y } });
+			sendMessage({ move: { x: this.x, y: this.y } });
 		}
 	};
 	player = new GameObject(game, 'char', x, y, onUpdate);
