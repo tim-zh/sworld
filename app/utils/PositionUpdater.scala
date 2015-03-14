@@ -21,7 +21,7 @@ class PositionUpdater(owner: ActorRef, entity: GameEntity, positionThreshold: Do
 			entity.dx = 0
 			entity.dy = 0
 			destination = null
-			location.tell(new LocationA.MoveEntity(entity), owner)
+			location.tell(LocationA.MoveEntity(entity), owner)
 		}
 
 		var previousPosition = (entity.x, entity.y)
@@ -43,7 +43,7 @@ class PositionUpdater(owner: ActorRef, entity: GameEntity, positionThreshold: Do
 						if (Math.abs(previousPosition._1 - entity.x) >= positionThreshold ||
 								Math.abs(previousPosition._2 - entity.y) >= positionThreshold) {
 							previousPosition = (entity.x, entity.y)
-							location.tell(new LocationA.MoveEntity(entity), owner)
+							location.tell(LocationA.MoveEntity(entity), owner)
 						}
 					} else
 						moveRejected(entity.x, entity.y)

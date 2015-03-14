@@ -84,7 +84,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 		entity.dy = dy
 		entity.x = x
 		entity.y = y
-		location ! LocationA.MoveEntity(x, y, dx, dy)
+		location ! LocationA.MoveEntity(entity)
 	}
 
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy()) }

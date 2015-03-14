@@ -18,9 +18,11 @@ object LocationA {
 
 	case class CreateEntity(clazz: Class[_], entity: GameEntity)
 
-	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0) {
-		def this(entity: GameEntity) = this(entity.x, entity.y, entity.dx, entity.dy)
+	object MoveEntity {
+		def apply(entity: GameEntity) = this(entity.x, entity.y, entity.dx, entity.dy)
 	}
+
+	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0)
 
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
