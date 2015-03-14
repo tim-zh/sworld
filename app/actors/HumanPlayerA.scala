@@ -20,13 +20,13 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 		val (newEntities, goneEntities, restEntities) = getNewGoneRest(entities, oldEntities)
 
 		val newEntitiesArr = Json.toJson(newEntities map { e =>
-			Json.obj("id" -> e.id, "x" -> e.x, "y" -> e.y, "type" -> e.eType, "maxSpeed" -> e.maxSpeed)
+			Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType, "maxSpeed" -> e.maxSpeed)
 		})
 		val goneEntitiesArr = Json.toJson(goneEntities map { e =>
 			Json.obj("id" -> e.id)
 		})
 		val changedEntitiesArr = Json.toJson(restEntities.map { e =>
-			Json.obj("id" -> e.id, "x" -> e.x, "y" -> e.y, "dx" -> e.dx, "dy" -> e.dy)
+			Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "dx" -> e.dx, "dy" -> e.dy)
 		})
 
 		out ! Json.obj(
