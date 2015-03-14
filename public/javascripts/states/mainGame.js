@@ -30,10 +30,10 @@ GameStates.MainGame.prototype = {
 					delete entities[e.id];
 				});
 				msg.changedEntities.forEach(function(e) {
-					moveAt(entities[e.id], e.x, e.y);
+					entities[e.id].x = e.x;
+					entities[e.id].y = e.y;
 					entities[e.id].body.velocity.set(e.dx, e.dy);
-					updateAnimation(e.dx, e.dy);
-					console.log(e.dx+" "+e.dy)
+					updateAnimation(entities[e.id], e.dx, e.dy);
 				});
 				return;
 			}

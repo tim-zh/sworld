@@ -59,10 +59,11 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			if (jsObj.value contains "move") {
 				val newX = (jsObj \ "move" \ "x").as[Double]
 				val newY = (jsObj \ "move" \ "y").as[Double]
+				val stop = (jsObj \ "move" \ "stop").asOpt[Boolean]
 				val dt = System.currentTimeMillis() - lastMoveTimestamp
 				lastMoveTimestamp = System.currentTimeMillis()
 				if (isMoveAllowed(newX, newY, dt))
-					setPositionAndVelocity(newX, newY)
+					setPositionAndVelocity(newX, newY, stop.getOrElse(false))
 				else
 					out ! Json.obj("move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
 			}

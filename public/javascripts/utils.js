@@ -55,18 +55,6 @@ var updateAnimation = function(object, dx, dy) {
 	}
 };
 
-var moveAt = function(object, x, y) {
-	object.body.velocity.set(0);
-	if (object.x = x)
-		object.body.prev.x = x;
-	else
-		object.x = x;
-	if (object.y = y)
-		object.body.prev.y = y;
-	else
-		object.y = y;
-};
-
 var keys;
 var player;
 var entities = [];
@@ -84,18 +72,22 @@ var getPlayer = function(x, y) {
 			dx = -playerMaxSpeed;
 		else if (keys.right.isDown)
 			dx = playerMaxSpeed;
+		if (dx != 0 && dy != 0) {
+			dx /= Math.sqrt(2);
+			dy /= Math.sqrt(2);
+		}
 
 		updateAnimation(player, dx, dy);
 		player.body.velocity.set(dx, dy);
 
-		if (dx != 0 || dy !=0) {
+		if (dx != 0 || dy != 0) {
 			if (player.stopped)
-				sendMessage({move: {x: this.x, y: this.y}});
+				sendMessage({ move: { x: this.x, y: this.y } });
 			player.stopped = false;
-			sendMessage({move: {x: this.x, y: this.y}});
+			sendMessage({ move: { x: this.x, y: this.y } });
 		} else if (!player.stopped) {
 			player.stopped = true;
-			sendMessage({ move: { x: this.x, y: this.y } });
+			sendMessage({ move: { x: this.x, y: this.y, stop: true } });
 		}
 	};
 	player = new GameObject(game, 'char', x, y, onUpdate);
