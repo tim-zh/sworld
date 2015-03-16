@@ -17,7 +17,7 @@ case class GameEntity(id: Long,
 	override def canEqual(other: Any): Boolean = other.isInstanceOf[GameEntity]
 
 	override def equals(other: Any): Boolean = other match {
-		case that: GameEntity => id == that.id
+		case that: GameEntity => (that canEqual this) && id == that.id
 		case _ => false
 	}
 
