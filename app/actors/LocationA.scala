@@ -51,12 +51,14 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			grid.update(entity, true)
 			entitiesMap -= entity
 			actorsMap -= sender
+			notifyEntitiesAboutDeletionOf(entity)
 
 		case Terminated(actor) if actorsMap contains actor =>
 			val entity = actorsMap(actor)
 			grid.update(entity, true)
 			entitiesMap -= entity
 			actorsMap -= actor
+			notifyEntitiesAboutDeletionOf(entity)
 
 		case Notify(to, msg) =>
 			entitiesMap.get(to) foreach { _ forward msg }
@@ -101,6 +103,13 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { entry =>
 			if (entry._1.id != entity.id)
 				entry._2 ! GameEntityA.NotifyEntityUpdate(entity)
+		}
+	}
+
+	def notifyEntitiesAboutDeletionOf(entity: GameEntity) {
+		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { entry =>
+			if (entry._1.id != entity.id)
+				entry._2 ! GameEntityA.NotifyEntityDeletion(entity)
 		}
 	}
 }

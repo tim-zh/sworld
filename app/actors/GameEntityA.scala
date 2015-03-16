@@ -12,7 +12,8 @@ object GameEntityA {
 	case class Listen(from: GameEntity, msg: String)
 	case class ListenChat(from: GameEntity, msg: String)
 
-	case class NotifyEntityUpdate(entity: GameEntity)
+	case class NotifyEntityUpdate(entities: GameEntity)
+	case class NotifyEntityDeletion(entity: GameEntity)
 
 	private var lastTransientId: Long = -1
 
@@ -42,6 +43,12 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 					notifyNewEntity(e)
 				}
 			} else if (visibleEntitiesMap contains e) {
+				visibleEntitiesMap -= e
+				notifyGoneEntity(e)
+			}
+
+		case NotifyEntityDeletion(e) =>
+			if (visibleEntitiesMap contains e) {
 				visibleEntitiesMap -= e
 				notifyGoneEntity(e)
 			}
