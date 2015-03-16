@@ -16,10 +16,8 @@ object LocationA {
 	case class Notify[+T](to: GameEntity, msg: T)
 	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
 
-	case class CreateEntity(clazz: Class[_], entity: GameEntity)
-
 	object MoveEntity {
-		def apply(entity: GameEntity) = this(entity.x, entity.y, entity.dx, entity.dy)
+		def apply(entity: GameEntity): MoveEntity = this(entity.x, entity.y, entity.dx, entity.dy)
 	}
 
 	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0)
@@ -45,7 +43,8 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			grid.update(entity)
 			entity.location = self.path.name
 			context watch sender
-			sender ! GameEntityA.LocationEntered
+			sender ! GameEntityA.LocationEntered(filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
+			notifyEntitiesAbout(entity)
 
 		case Leave if actorsMap contains sender =>
 			val entity = actorsMap(sender)
@@ -86,9 +85,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			grid.update(entity)
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
-
-		case LocationA.CreateEntity(clazz, entity) =>
-			Akka.system().actorOf(Props(clazz, self, entity))
+			notifyEntitiesAbout(entity)
 	}
 
 	def filterNearbyEntities(x: Double, y: Double, radius: Double): Map[GameEntity, ActorRef] =
@@ -99,4 +96,11 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			entitiesSeq.view.filter(e => Math.hypot(x - e.x, y - e.y) <= radius).
 					map(e => (e.copy(), entitiesMap(e))).toMap
 		}
+
+	def notifyEntitiesAbout(entity: GameEntity) {
+		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { entry =>
+			if (entry._1.id != entity.id)
+				entry._2 ! GameEntityA.NotifyEntityUpdate(entity)
+		}
+	}
 }

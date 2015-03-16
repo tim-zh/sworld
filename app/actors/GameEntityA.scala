@@ -1,20 +1,18 @@
 package actors
 
-import akka.actor.{ActorRef, Cancellable}
+import akka.actor.{Props, ActorRef}
 import models.GameEntity
+import play.libs.Akka
 import utils.Utils
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 
 object GameEntityA {
 
-	object LocationEntered
+	case class LocationEntered(entities: Map[GameEntity, ActorRef])
 
 	case class Listen(from: GameEntity, msg: String)
 	case class ListenChat(from: GameEntity, msg: String)
 
-	private object LookAround
+	case class NotifyEntityUpdate(entity: GameEntity)
 
 	private var lastTransientId: Long = -1
 
@@ -24,30 +22,29 @@ object GameEntityA {
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends ReceiveLoggerA {
 	import actors.GameEntityA._
 
-	private var lookAroundTick: Cancellable = null
 	private var visibleEntitiesMap = Map[GameEntity, ActorRef]()
-
-	protected val lookAroundInterval = 100
 
 	override def preStart() {
 		location ! LocationA.Enter(entity.copy())
 	}
 
 	override def receive = {
-		case LocationEntered =>
-			if (lookAroundTick != null)
-				lookAroundTick.cancel()
-			locationEntered(sender)
-			lookAroundTick = context.system.scheduler.scheduleOnce(lookAroundInterval.milliseconds, self, LookAround)
+		case LocationEntered(entities) =>
+			visibleEntitiesMap = entities filter (_._1.id != entity.id)
+			locationEntered(sender, visibleEntitiesMap)
 
-		case LookAround =>
-			location ! LocationA.LookupEntities(entity.x, entity.y, entity.viewRadius, null)
-
-		case LocationA.LookupEntitiesResult(entities, param) =>
-			val newEntities = entities.filter(_._1.id != entity.id)
-			lookAround(newEntities, visibleEntitiesMap)
-			visibleEntitiesMap = newEntities
-			context.system.scheduler.scheduleOnce(lookAroundInterval.milliseconds, self, LookAround)
+		case NotifyEntityUpdate(e) =>
+			if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius) {
+				if (visibleEntitiesMap contains e)
+					notifyUpdatedEntity(e)
+				else {
+					visibleEntitiesMap += (e -> sender)
+					notifyNewEntity(e)
+				}
+			} else if (visibleEntitiesMap contains e) {
+				visibleEntitiesMap -= e
+				notifyGoneEntity(e)
+			}
 
 		case ListenChat(from, msg) if sender == location =>
 			listenChat(from, msg)
@@ -59,14 +56,18 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 			handleMessage(msg)
 	}
 
-	def locationEntered(newLocation: ActorRef) {
+	def locationEntered(newLocation: ActorRef, entities: Map[GameEntity, ActorRef]) {
 		if (location != newLocation)
 			location ! LocationA.Leave
 		location = newLocation
 		entity.location = location.path.name
 	}
 
-	def lookAround(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) {}
+	def notifyUpdatedEntity(e: GameEntity) {}
+
+	def notifyNewEntity(e: GameEntity) {}
+
+	def notifyGoneEntity(e: GameEntity) {}
 
 	def listenChat(from: GameEntity, msg: String) {}
 
@@ -89,23 +90,9 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy()) }
 
-	def createGameEntity(entity: GameEntity) = entity.name match {
+	def createGameEntity(e: GameEntity) = e.name match {
 		case "bot" =>
-			location ! LocationA.CreateEntity(classOf[BotPlayerA], entity)
-	}
-
-	def getNewGoneRest(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) = {
-		val entitiesMap = entities.map(e => (e._1.id, e._1))
-		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
-
-		val ids = entitiesMap.keySet
-		val oldIds = oldEntitiesMap.keySet
-
-		val newIds = ids.diff(oldIds)
-		val goneIds = oldIds.diff(ids)
-		val restIds = ids.diff(newIds)
-
-		(newIds.map(entitiesMap(_)), goneIds.map(oldEntitiesMap(_)), restIds.map(entitiesMap(_)))
+			Akka.system().actorOf(Props(classOf[BotPlayerA], location, e))
 	}
 
 	def isMoveAllowed(x: Double, y: Double, dtInMillis: Long) =

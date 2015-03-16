@@ -14,8 +14,15 @@ case class GameEntity(id: Long,
 											maxSpeed: Double,
 											var dx: Double = 0,
 											var dy: Double = 0) {
-	override def hashCode(): Int = id.hashCode() //scala 2.11.1 mutable.HashMap/HashSet bug in LocationA.updateGrid - entitiesGridMap.get(entity)
-}
+	override def canEqual(other: Any): Boolean = other.isInstanceOf[GameEntity]
+
+	override def equals(other: Any): Boolean = other match {
+		case that: GameEntity => id == that.id
+		case _ => false
+	}
+
+	override def hashCode(): Int = id.hashCode()
+ }
 
 class SlickGameEntity(lTag: lifted.Tag) extends Table[(Long, String, String, String, Double, Double, Double, Double)](lTag, "game_entities") {
 	def id = column[Long]("id", O.PrimaryKey, O.AutoInc)

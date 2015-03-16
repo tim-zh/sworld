@@ -7,10 +7,12 @@ import utils.PositionUpdater
 class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 	private val positionUpdater = new PositionUpdater(self, entity)
 
-	override def locationEntered(newLocation: ActorRef) {
+	override def locationEntered(newLocation: ActorRef, entities: Map[GameEntity, ActorRef]) {
+		super.locationEntered(newLocation, entities)
 		if (positionUpdater.isStarted)
 			positionUpdater.stop()
-		positionUpdater.start(sender, isMoveAllowed, (x: Double, y: Double) => ())
+		positionUpdater.start(newLocation, isMoveAllowed, (x: Double, y: Double) => ())
+		entities.keys.foreach(e => followIfPlayer(e))
 	}
 
 	override def listenChat(from: GameEntity, msg: String) {
@@ -23,9 +25,21 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 			say("hey", 40)
 	}
 
-	override def lookAround(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) {
-		val player = entities.find(_._1.eType == "player").map(_._1)
-		if (player.isDefined && Math.hypot(entity.x - player.get.x, entity.y - player.get.y) > entity.maxSpeed)
-			positionUpdater.setDestination(player.get.x, player.get.y, entity.maxSpeed)
+	override def notifyUpdatedEntity(e: GameEntity) {
+		followIfPlayer(e)
+	}
+
+	override def notifyNewEntity(e: GameEntity) {
+		followIfPlayer(e)
+	}
+
+	override def notifyGoneEntity(e: GameEntity) {
+		if (e.eType == "player")
+			say("oh, come on!", 40)
+	}
+
+	def followIfPlayer(e: GameEntity) {
+		if (e.eType == "player" && Math.hypot(entity.x - e.x, entity.y - e.y) > entity.maxSpeed)
+			positionUpdater.setDestination(e.x, e.y, entity.maxSpeed)
 	}
 }

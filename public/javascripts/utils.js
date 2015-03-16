@@ -1,4 +1,4 @@
-var GameObject = function(game, img, x, y, onUpdate) {
+var GameObject = function(game, img, x, y) {
 	var animatedSprite = animatedSprites[img];
 	Phaser.Sprite.call(this, game, x, y, animatedSprite.name);
 	game.physics.arcade.enable(this);
@@ -16,7 +16,6 @@ var GameObject = function(game, img, x, y, onUpdate) {
 	this.directionSide = animatedSprite.directionSide;
 	this.anchor.set(0.5);
 	game.add.existing(this);
-	this.update = onUpdate;
 };
 GameObject.prototype = Object.create(Phaser.Sprite.prototype);
 GameObject.prototype.constructor = GameObject;
@@ -90,7 +89,8 @@ var getPlayer = function(x, y) {
 			sendMessage({ move: { x: this.x, y: this.y, stop: true } });
 		}
 	};
-	player = new GameObject(game, 'char', x, y, onUpdate);
+	player = new GameObject(game, 'char', x, y);
+	player.update = onUpdate;
 	player.stopped = true;
 	game.camera.follow(player);
 	return player;

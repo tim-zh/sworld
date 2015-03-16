@@ -17,40 +17,49 @@ GameStates.MainGame.prototype = {
 
 		var receive = function(message) {
 			var msg = JSON.parse(message.data);
+
 			if (msg.newLocation) {
 				document.title = msg.newLocation;
-				return;
 			}
-			if (msg.newEntities) {
-				msg.newEntities.forEach(function(e) {
-					entities[e.id] = new GameObject(game, 'bot', e.x, e.y, function() {});
-				});
-				msg.goneEntities.forEach(function(e) {
-					entities[e.id].destroy();
-					delete entities[e.id];
-				});
-				msg.changedEntities.forEach(function(e) {
+
+			if (msg.eUpdate) {
+				msg.eUpdate.forEach(function(e) {
 					entities[e.id].x = e.x;
 					entities[e.id].y = e.y;
 					entities[e.id].body.velocity.set(e.dx, e.dy);
 					updateAnimation(entities[e.id], e.dx, e.dy);
 				});
-				return;
 			}
+
+			if (msg.eNew) {
+				msg.eNew.forEach(function(e) {
+					entities[e.id] = new GameObject(game, 'bot', e.x, e.y);
+				});
+			}
+
+			if (msg.eGone) {
+				msg.eGone.forEach(function(e) {
+					entities[e.id].destroy();
+					delete entities[e.id];
+				});
+			}
+
 			if (msg.move) {
 				getPlayer().x = msg.move.x;
 				getPlayer().y = msg.move.y;
-				return;
 			}
-			var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
-			if (msg.chat)
-				entry += " chats: " + msg.chat + "<br>";
-			if (msg.say)
-				entry += " says: " + msg.say + "<br>";
-			el("screen").innerHTML += entry;
+
+			if (msg.say || msg.chat) {
+				var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
+				if (msg.chat)
+					entry += " chats: " + msg.chat + "<br>";
+				if (msg.say)
+					entry += " says: " + msg.say + "<br>";
+				el("screen").innerHTML += entry;
+			}
 		};
 
-		getPlayer(playerStartPosition[0], playerStartPosition[1]);
+		getPlayer(0, 0);
 		connect('socket', receive);
 	},
 

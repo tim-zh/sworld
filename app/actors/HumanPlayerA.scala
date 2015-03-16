@@ -8,31 +8,33 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	var lastMoveTimestamp = 0L
 
-	override def locationEntered(newLocation: ActorRef) {
-		super.locationEntered(newLocation)
-		out ! Json.obj("newLocation" -> newLocation.path.name, "move" -> Json.obj("x" -> entity.x, "y" -> entity.y))
+	override def locationEntered(newLocation: ActorRef, entities: Map[GameEntity, ActorRef]) {
+		super.locationEntered(newLocation, entities)
+		out ! Json.obj(
+			"newLocation" -> newLocation.path.name,
+			"move" -> Json.obj("x" -> entity.x, "y" -> entity.y),
+			"eNew" -> Json.toJson(entities.keys map { e =>
+				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType, "maxSpeed" -> e.maxSpeed)
+			})
+		)
 	}
 
-	override def lookAround(entities: Map[GameEntity, ActorRef], oldEntities: Map[GameEntity, ActorRef]) {
-		if (entities.isEmpty && oldEntities.isEmpty)
-			return
-		val oldEntitiesMap = oldEntities.map(e => (e._1.id, e._1))
-		val (newEntities, goneEntities, restEntities) = getNewGoneRest(entities, oldEntities)
+	override def notifyUpdatedEntity(e: GameEntity) {
+		out ! Json.obj("eUpdate" -> Json.arr(Json.obj(
+			"id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "dx" -> e.dx, "dy" -> e.dy
+		)))
+	}
 
-		val newEntitiesArr = Json.toJson(newEntities map { e =>
-			Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType, "maxSpeed" -> e.maxSpeed)
-		})
-		val goneEntitiesArr = Json.toJson(goneEntities map { e =>
-			Json.obj("id" -> e.id)
-		})
-		val changedEntitiesArr = Json.toJson(restEntities.map { e =>
-			Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "dx" -> e.dx, "dy" -> e.dy)
-		})
+	override def notifyNewEntity(e: GameEntity) {
+		out ! Json.obj("eNew" -> Json.arr(Json.obj(
+			"id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType, "maxSpeed" -> e.maxSpeed
+		)))
+	}
 
-		out ! Json.obj(
-			"newEntities" -> newEntitiesArr,
-			"changedEntities" -> changedEntitiesArr,
-			"goneEntities" -> goneEntitiesArr)
+	override def notifyGoneEntity(e: GameEntity) {
+		out ! Json.obj("eGone" -> Json.arr(Json.obj(
+			"id" -> e.id
+		)))
 	}
 
 	override def listenChat(from: GameEntity, msg: String) {

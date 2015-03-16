@@ -7,6 +7,8 @@ import scala.concurrent.duration.{FiniteDuration, _}
 
 package object actors {
 
+	val maxViewRadius = 200d //is greater than any entity's viewRadius to enable notifications of gone entities
+
 	def blockingGet[R](from: ActorRef, msg: AnyRef, timeout: FiniteDuration = 1 second): Option[R] = {
 		import scala.concurrent.ExecutionContext.Implicits.global
 		try {
