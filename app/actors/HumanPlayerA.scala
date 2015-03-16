@@ -62,7 +62,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 				val newX = (jsObj \ "move" \ "x").as[Double]
 				val newY = (jsObj \ "move" \ "y").as[Double]
 				val stop = (jsObj \ "move" \ "stop").asOpt[Boolean]
-				val dt = System.currentTimeMillis() - lastMoveTimestamp
+				val dt = Math.min(System.currentTimeMillis() - lastMoveTimestamp, 40)
 				lastMoveTimestamp = System.currentTimeMillis()
 				if (isMoveAllowed(newX, newY, dt))
 					setPositionAndVelocity(newX, newY, stop.getOrElse(false))
