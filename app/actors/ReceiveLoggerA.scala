@@ -7,7 +7,7 @@ trait ReceiveLoggerA extends Actor with ActorLogging {
 
 	override def aroundReceive(receive: Actor.Receive, msg: Any) {
 		if (loggingEnabled)
-			log.debug(msg.toString)
+			log.debug("\n" + msg.toString)
 		super.aroundReceive(receive, msg)
 	}
 }
