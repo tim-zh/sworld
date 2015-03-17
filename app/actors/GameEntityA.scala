@@ -53,6 +53,18 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 				notifyGoneEntity(e)
 			}
 
+		case LocationA.LookupEntitiesResult(entities) =>
+			entities.keys.filter(_.id != entity.id) foreach { e =>
+				if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius && !visibleEntitiesMap.contains(e)) {
+					visibleEntitiesMap += (e -> sender)
+					notifyNewEntity(e)
+				}
+			}
+			visibleEntitiesMap.keys.filter(e => !entities.contains(e)) foreach { e =>
+				visibleEntitiesMap -= e
+				notifyGoneEntity(e)
+			}
+
 		case ListenChat(from, msg) if sender == location =>
 			listenChat(from, msg)
 

@@ -10,8 +10,8 @@ object LocationA {
 	case class Enter(entity: GameEntity)
 	object Leave
 
-	case class LookupEntities(x: Double, y: Double, radius: Double, param: AnyRef)
-	case class LookupEntitiesResult(entities: Map[GameEntity, ActorRef], param: AnyRef)
+	case class LookupEntities(x: Double, y: Double, radius: Double)
+	case class LookupEntitiesResult(entities: Map[GameEntity, ActorRef])
 
 	case class Notify[+T](to: GameEntity, msg: T)
 	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
@@ -88,6 +88,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
 			notifyEntitiesAbout(entity)
+			sender ! LookupEntitiesResult(filterNearbyEntities(entity.x, entity.y, entity.viewRadius), null)
 	}
 
 	def filterNearbyEntities(x: Double, y: Double, radius: Double): Map[GameEntity, ActorRef] =
