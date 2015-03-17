@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor.{Props, ActorRef}
-import models.GameEntity
+import models.{EntityType, GameEntity}
 import play.libs.Akka
 import utils.Utils
 
@@ -109,8 +109,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy()) }
 
-	def createGameEntity(e: GameEntity) = e.name match {
-		case "bot" =>
+	def createGameEntity(e: GameEntity) = e.eType match {
+		case EntityType.bot =>
 			Akka.system().actorOf(Props(classOf[BotPlayerA], location, e))
 	}
 
