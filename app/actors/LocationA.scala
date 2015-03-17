@@ -68,7 +68,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 
 		case LookupEntities(x, y, radius, param) =>
 			val filtered = filterNearbyEntities(x, y, radius)
-			sender ! LookupEntitiesResult(filtered, param)
+			sender ! LookupEntitiesResult(filtered)
 
 		case BroadcastChat(msg) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
@@ -88,7 +88,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
 			notifyEntitiesAbout(entity)
-			sender ! LookupEntitiesResult(filterNearbyEntities(entity.x, entity.y, entity.viewRadius), null)
+			sender ! LookupEntitiesResult(filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
 	}
 
 	def filterNearbyEntities(x: Double, y: Double, radius: Double): Map[GameEntity, ActorRef] =
