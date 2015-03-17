@@ -27,7 +27,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	override def notifyNewEntity(e: GameEntity) {
 		out ! Json.obj("eNew" -> Json.arr(Json.obj(
-			"id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType, "maxSpeed" -> e.maxSpeed
+			"id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType
 		)))
 	}
 
