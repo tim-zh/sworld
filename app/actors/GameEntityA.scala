@@ -96,7 +96,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	def chat(msg: String) { location ! LocationA.BroadcastChat(msg) }
 
-	def say(msg: String, radius: Double) { location ! LocationA.Broadcast(msg, radius) }
+	def say(msg: String) { location ! LocationA.Broadcast(msg, entity.voiceRadius * (if (msg.endsWith("!")) 2 else 1)) }
 
 	def setPositionAndVelocity(x: Double, y: Double, stop: Boolean) {
 		val (dx, dy) = if (stop) (0d, 0d) else Utils.getVelocityVectorTo(entity, x, y)

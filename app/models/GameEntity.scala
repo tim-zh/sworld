@@ -11,6 +11,7 @@ case class GameEntity(id: Long,
 											var x: Double,
 											var y: Double,
 											viewRadius: Double,
+											voiceRadius: Double = 0,
 											maxSpeed: Double,
 											var dx: Double = 0,
 											var dy: Double = 0) {
@@ -24,7 +25,7 @@ case class GameEntity(id: Long,
 	override def hashCode(): Int = id.hashCode()
  }
 
-class SlickGameEntity(lTag: lifted.Tag) extends Table[(Long, String, String, String, Double, Double, Double, Double)](lTag, "game_entities") {
+class SlickGameEntity(lTag: lifted.Tag) extends Table[(Long, String, String, String, Double, Double, Double, Double, Double)](lTag, "game_entities") {
 	def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 	def eType = column[String]("type")
 	def name = column[String]("name")
@@ -32,6 +33,7 @@ class SlickGameEntity(lTag: lifted.Tag) extends Table[(Long, String, String, Str
 	def x = column[Double]("x", O.Default(0))
 	def y = column[Double]("y", O.Default(0))
 	def view_radius = column[Double]("view_radius", O.Default(100))
+	def voice_radius = column[Double]("voice_radius", O.Default(100))
 	def max_speed = column[Double]("max_speed", O.Default(100))
-	def * = (id, eType, name, location, x, y, view_radius, max_speed)
+	def * = (id, eType, name, location, x, y, view_radius, voice_radius, max_speed)
 }

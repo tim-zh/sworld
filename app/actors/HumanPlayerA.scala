@@ -77,9 +77,9 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 			if (jsObj.value contains "say") {
 				val msg = (jsObj \ "say").as[String]
-				say(msg, 50)
+				say(msg)
 				if (msg == "rise")
-					createGameEntity(GameEntity(GameEntityA.generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 15))
+					createGameEntity(GameEntity(GameEntityA.generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 100, 15))
 			}
 	}
 }

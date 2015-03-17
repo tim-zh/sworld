@@ -25,7 +25,7 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 
 	override def listen(from: GameEntity, msg: String) {
 		if (from != entity && msg == "hi")
-			say("hey", 40)
+			say("hey")
 	}
 
 	override def notifyUpdatedEntity(e: GameEntity) {
@@ -38,7 +38,7 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 
 	override def notifyGoneEntity(e: GameEntity) {
 		if (e.eType == "player")
-			say("oh, come on!", 40)
+			say("oh, come on!")
 	}
 
 	def followIfPlayer(e: GameEntity) {
