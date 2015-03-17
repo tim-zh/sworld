@@ -89,7 +89,7 @@ var getPlayer = function(x, y) {
 			sendMessage({ move: { x: this.x, y: this.y, stop: true } });
 		}
 	};
-	player = new GameObject(game, 'char', x, y);
+	player = new GameObject(game, 'player', x, y);
 	player.update = onUpdate;
 	player.stopped = true;
 	game.camera.follow(player);

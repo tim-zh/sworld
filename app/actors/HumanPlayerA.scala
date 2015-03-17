@@ -14,7 +14,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			"newLocation" -> newLocation.path.name,
 			"move" -> Json.obj("x" -> entity.x, "y" -> entity.y),
 			"eNew" -> Json.toJson(entities.keys map { e =>
-				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType, "maxSpeed" -> e.maxSpeed)
+				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType)
 			})
 		)
 	}

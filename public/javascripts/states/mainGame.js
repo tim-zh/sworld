@@ -33,7 +33,7 @@ GameStates.MainGame.prototype = {
 
 			if (msg.eNew) {
 				msg.eNew.forEach(function(e) {
-					entities[e.id] = new GameObject(game, 'bot', e.x, e.y);
+					entities[e.id] = new GameObject(game, e.type, e.x, e.y);
 				});
 			}
 

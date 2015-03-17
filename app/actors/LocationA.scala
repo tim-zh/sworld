@@ -66,7 +66,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 		case NotifyArea(x, y, radius, msg) =>
 			filterNearbyEntities(x, y, radius) foreach { _._2 forward msg }
 
-		case LookupEntities(x, y, radius, param) =>
+		case LookupEntities(x, y, radius) =>
 			val filtered = filterNearbyEntities(x, y, radius)
 			sender ! LookupEntitiesResult(filtered)
 
