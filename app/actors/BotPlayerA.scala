@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor.ActorRef
-import models.GameEntity
+import models.{EntityType, GameEntity}
 import utils.{InfiniteUpdater, RegisteredBot}
 
 class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
@@ -37,12 +37,12 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 	}
 
 	override def notifyGoneEntity(e: GameEntity) {
-		if (e.eType == "player")
+		if (e.eType == EntityType.player)
 			say("oh, come on!")
 	}
 
 	def followIfPlayer(e: GameEntity) {
-		if (e.eType == "player" && Math.hypot(entity.x - e.x, entity.y - e.y) > entity.maxSpeed)
+		if (e.eType == EntityType.player && Math.hypot(entity.x - e.x, entity.y - e.y) > entity.maxSpeed)
 			positionUpdater.setDestination(e.x, e.y, entity.maxSpeed)
 	}
 }

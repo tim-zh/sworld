@@ -5,7 +5,7 @@ import scala.slick.lifted
 
 case class GameEntity(id: Long,
 											transient: Boolean,
-											eType: String,
+											eType: EntityType,
 											name: String,
 											var location: String,
 											var x: Double,

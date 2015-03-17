@@ -2,6 +2,7 @@ package controllers
 
 import actors._
 import akka.actor._
+import models.EntityType
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.JsValue
@@ -38,7 +39,7 @@ object Application extends Controller {
 			registerData => {
 				val errors = registerData.validate
 				if (errors.isEmpty) {
-					val userInfo = dao.addGameEntity("player", registerData.name, "default", -1, -1, 100, 100, 100)
+					val userInfo = dao.addGameEntity(EntityType.player, registerData.name, "default", -1, -1, 100, 100, 100)
 					val newUser = dao.addUser(registerData.name, registerData.password, userInfo)
 					AuthController.authUser(Some(newUser))
 				} else

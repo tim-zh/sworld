@@ -46,7 +46,7 @@ object DaoImpl extends Dao {
 
 	def getGameEntity(id: Long): Option[GameEntity] = db withDynTransaction { queryGetEntityById(id).firstOption map convertEntity }
 
-	def addGameEntity(eType: String,
+	def addGameEntity(eType: EntityType,
 										name: String,
 										location: String,
 										x: Double,
@@ -55,14 +55,14 @@ object DaoImpl extends Dao {
 										voiceRadius: Double,
 										maxSpeed: Double) = db withDynTransaction {
 		val id = (entities.map(e => (e.eType, e.name, e.location, e.x, e.y, e.view_radius, e.voice_radius, e.max_speed)) returning entities.map(_.id)) +=
-				(eType, name, location, x, y, viewRadius, voiceRadius, maxSpeed)
+				(eType.name, name, location, x, y, viewRadius, voiceRadius, maxSpeed)
 		GameEntity(id, false, eType, name, location, x, y, viewRadius, voiceRadius, maxSpeed)
 	}
 
  	def deleteGameEntity(id: Long) = db withDynTransaction { queryGetEntityById(id).delete == 1 }
 
  	def updateGameEntity(id: Long,
-											 eType: String,
+											 eType: EntityType,
 											 name: String,
 											 location: String,
 											 x: Double,
@@ -70,12 +70,12 @@ object DaoImpl extends Dao {
 											 viewRadius: Double,
 											 voiceRadius: Double,
 											 maxSpeed: Double) = db withDynTransaction {
-		queryGetEntityFieldsById(id).update((eType, name, location, x, y, viewRadius, voiceRadius, maxSpeed)) == 1
+		queryGetEntityFieldsById(id).update((eType.name, name, location, x, y, viewRadius, voiceRadius, maxSpeed)) == 1
 	}
 
 
 	private def convertUser(d: (Long, Long, String, String, Long)) = User.tupled(d)
 
 	private def convertEntity(d: (Long, String, String, String, Double, Double, Double, Double, Double)) =
-		GameEntity(d._1, false, d._2, d._3, d._4, d._5, d._6, d._7, d._8, d._9)
+		GameEntity(d._1, false, EntityType.get(d._2), d._3, d._4, d._5, d._6, d._7, d._8, d._9)
 }

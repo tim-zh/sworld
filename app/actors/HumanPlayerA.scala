@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor._
-import models.GameEntity
+import models.{EntityType, GameEntity}
 import play.api.libs.json.{JsBoolean, JsObject, Json}
 
 class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
@@ -14,7 +14,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 			"newLocation" -> newLocation.path.name,
 			"move" -> Json.obj("x" -> entity.x, "y" -> entity.y),
 			"eNew" -> Json.toJson(entities.keys map { e =>
-				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType)
+				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType.name)
 			})
 		)
 	}
@@ -27,7 +27,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	override def notifyNewEntity(e: GameEntity) {
 		out ! Json.obj("eNew" -> Json.arr(Json.obj(
-			"id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType
+			"id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType.name
 		)))
 	}
 
@@ -79,7 +79,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 				val msg = (jsObj \ "say").as[String]
 				say(msg)
 				if (msg == "rise")
-					createGameEntity(GameEntity(GameEntityA.generateId(), true, "bot", "bot", entity.location, entity.x + 30, entity.y + 30, 100, 100, 15))
+					createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.bot, "bot", entity.location, entity.x + 30, entity.y + 30, 100, 100, 15))
 			}
 	}
 }
