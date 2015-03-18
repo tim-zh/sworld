@@ -10,10 +10,11 @@ GameStates.MainGame.prototype = {
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 
 		var map = game.add.tilemap('map');
-		map.addTilesetImage('tiles');
-		layer = map.createLayer('Tile Layer 1');
-		layer.resizeWorld();
+		map.addTilesetImage(null, 'tiles', 32, 32, 0, 0, 1);
 		map.setCollisionBetween(1, 25);
+
+		layer = map.createLayer('default');
+		layer.resizeWorld();
 
 		var receive = function(message) {
 			var msg = JSON.parse(message.data);
