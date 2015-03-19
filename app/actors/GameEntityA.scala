@@ -122,5 +122,6 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	def isMoveAllowed(x: Double, y: Double, dtInMillis: Long) =
 		Math.abs(entity.x - x) <= entity.maxSpeed * dtInMillis * 1.5 / 1000 &&
-				Math.abs(entity.y - y) <= entity.maxSpeed * dtInMillis * 1.5 / 1000
+				Math.abs(entity.y - y) <= entity.maxSpeed * dtInMillis * 1.5 / 1000 &&
+				currentLocationInfo.getCellType(x, y).contains(0)
 }

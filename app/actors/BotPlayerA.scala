@@ -10,7 +10,10 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 
 	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
 		super.locationEntered(newLocation, info, entities)
-		positionUpdater.setup(newLocation, isMoveAllowed, (x: Double, y: Double) => ())
+		positionUpdater.setup(newLocation, isMoveAllowed, (x: Double, y: Double) => {
+			entity.dx = 0
+			entity.dy = 0
+		})
 		if (!isRegistered) {
 			InfiniteUpdater.register(self, positionUpdater)
 			isRegistered = true
