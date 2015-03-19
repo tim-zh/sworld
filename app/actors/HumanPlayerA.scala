@@ -3,18 +3,23 @@ package actors
 import akka.actor._
 import models.{EntityType, GameEntity}
 import play.api.libs.json.{JsBoolean, JsObject, Json}
+import utils.LocationInfo
 
 class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 
 	var lastMoveTimestamp = 0L
 
-	override def locationEntered(newLocation: ActorRef, entities: Map[GameEntity, ActorRef]) {
-		super.locationEntered(newLocation, entities)
+	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
+		super.locationEntered(newLocation, info, entities)
+		import LocationInfo.locationInfoWrites
 		out ! Json.obj(
-			"newLocation" -> newLocation.path.name,
+			"location" -> Json.toJson(info),
 			"move" -> Json.obj("x" -> entity.x, "y" -> entity.y),
 			"eNew" -> Json.toJson(entities.keys map { e =>
 				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType.name)
+			}),
+			"eGone" -> Json.toJson(visibleEntitiesMap.keys map { e =>
+				Json.obj("id" -> e.id)
 			})
 		)
 	}
@@ -53,8 +58,8 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	override def handleMessage: Receive = {
 		case jsObj: JsObject =>
-			if (jsObj.value contains "newLocation") {
-				val name = (jsObj \ "newLocation").as[String]
+			if (jsObj.value contains "location") {
+				val name = (jsObj \ "location").as[String]
 				enterLocation(name)
 			}
 

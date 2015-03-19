@@ -2,14 +2,14 @@ package actors
 
 import akka.actor.ActorRef
 import models.{EntityType, GameEntity}
-import utils.{InfiniteUpdater, RegisteredBot}
+import utils.{LocationInfo, InfiniteUpdater, RegisteredBot}
 
 class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 	private val positionUpdater = RegisteredBot(self, entity)
 	private var isRegistered = false
 
-	override def locationEntered(newLocation: ActorRef, entities: Map[GameEntity, ActorRef]) {
-		super.locationEntered(newLocation, entities)
+	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
+		super.locationEntered(newLocation, info, entities)
 		positionUpdater.setup(newLocation, isMoveAllowed, (x: Double, y: Double) => ())
 		if (!isRegistered) {
 			InfiniteUpdater.register(self, positionUpdater)

@@ -14,7 +14,10 @@
 		el("chatButton").onclick = chat;
 		var say = function() {
 			var text = el('text').value;
-			sendMessage({ say: text });
+			if (text.indexOf('goto ') == 0)
+				sendMessage({ location: text.substring(5) });
+			else
+				sendMessage({ say: text });
 			el('text').value = "";
 		};
 		el("sayButton").onclick = say;

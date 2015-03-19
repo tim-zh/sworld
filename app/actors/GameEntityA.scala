@@ -3,11 +3,11 @@ package actors
 import akka.actor.{Props, ActorRef}
 import models.{EntityType, GameEntity}
 import play.libs.Akka
-import utils.Utils
+import utils.{LocationInfo, Utils}
 
 object GameEntityA {
 
-	case class LocationEntered(entities: Map[GameEntity, ActorRef])
+	case class LocationEntered(info: LocationInfo, entities: Map[GameEntity, ActorRef])
 
 	case class Listen(from: GameEntity, msg: String)
 	case class ListenChat(from: GameEntity, msg: String)
@@ -23,16 +23,19 @@ object GameEntityA {
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends ReceiveLoggerA {
 	import actors.GameEntityA._
 
-	private var visibleEntitiesMap = Map[GameEntity, ActorRef]()
+	protected var currentLocationInfo: LocationInfo = _
+	protected var visibleEntitiesMap = Map[GameEntity, ActorRef]()
 
 	override def preStart() {
 		location ! LocationA.Enter(entity.copy())
 	}
 
 	override def receive = {
-		case LocationEntered(entities) =>
-			visibleEntitiesMap = entities filter (_._1.id != entity.id)
-			locationEntered(sender, visibleEntitiesMap)
+		case LocationEntered(info, entities) =>
+			currentLocationInfo = info
+			val newEntities = entities filter (_._1.id != entity.id)
+			locationEntered(sender, info, newEntities)
+			visibleEntitiesMap = newEntities
 
 		case NotifyEntityUpdate(e) =>
 			if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius) {
@@ -75,7 +78,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 			handleMessage(msg)
 	}
 
-	def locationEntered(newLocation: ActorRef, entities: Map[GameEntity, ActorRef]) {
+	def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
 		if (location != newLocation)
 			location ! LocationA.Leave
 		location = newLocation
@@ -107,7 +110,10 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 		location ! LocationA.MoveEntity(entity)
 	}
 
-	def enterLocation(name: String) { context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy()) }
+	def enterLocation(name: String) {
+		if (currentLocationInfo != null && currentLocationInfo.name != name)
+			context.actorSelection("/user/" + name) ! LocationA.Enter(entity.copy())
+	}
 
 	def createGameEntity(e: GameEntity) = e.eType match {
 		case EntityType.bot =>

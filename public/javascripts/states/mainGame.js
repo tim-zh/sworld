@@ -1,5 +1,3 @@
-var layer;
-
 GameStates.MainGame = function(game) {};
 GameStates.MainGame.prototype = {
 	create: function() {
@@ -9,18 +7,12 @@ GameStates.MainGame.prototype = {
 
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 
-		var map = game.add.tilemap('map');
-		map.addTilesetImage(null, 'tiles', 32, 32, 0, 0, 1);
-		map.setCollisionBetween(1, 25);
-
-		layer = map.createLayer('default');
-		layer.resizeWorld();
-
 		var receive = function(message) {
 			var msg = JSON.parse(message.data);
 
-			if (msg.newLocation) {
-				document.title = msg.newLocation;
+			if (msg.location) {
+				document.title = msg.location.name;
+				loadMap(msg.location.name, msg.location.map);
 			}
 
 			if (msg.eUpdate) {

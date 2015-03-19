@@ -3,7 +3,7 @@ package actors
 import akka.actor._
 import models.GameEntity
 import play.libs.Akka
-import utils.Grid
+import utils.{LocationInfo, Grid}
 
 object LocationA {
 
@@ -25,16 +25,16 @@ object LocationA {
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
 
-	def create(name: String, dao: ActorRef, width: Int, height: Int, cellSize: Int) =
-		Akka.system().actorOf(Props(classOf[LocationA], dao, width, height, cellSize), name)
+	def create(name: String, dao: ActorRef, info: LocationInfo) =
+		Akka.system().actorOf(Props(classOf[LocationA], dao, info), name)
 }
 
-class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends ReceiveLoggerA {
+class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
 	import actors.LocationA._
 
 	private var actorsMap = Map[ActorRef, GameEntity]()
 	private var entitiesMap = Map[GameEntity, ActorRef]()
-	private val grid = new Grid(width, height, cellSize)
+	private val grid = new Grid(info.width, info.height, info.cellSize)
 
 	def receive = {
 		case Enter(entity) =>
@@ -43,7 +43,7 @@ class LocationA(dao: ActorRef, width: Int, height: Int, cellSize: Int) extends R
 			grid.update(entity)
 			entity.location = self.path.name
 			context watch sender
-			sender ! GameEntityA.LocationEntered(filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
+			sender ! GameEntityA.LocationEntered(info, filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
 			notifyEntitiesAbout(entity)
 
 		case Leave if actorsMap contains sender =>

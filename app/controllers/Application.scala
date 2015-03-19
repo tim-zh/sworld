@@ -8,11 +8,13 @@ import play.api.data.Forms._
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import play.api.Play.current
+import utils.LocationInfo
 import scala.concurrent.Future
 
 object Application extends Controller {
 	val daoA = DaoA.create(dao)
-	val defaultLocation = LocationA.create("default", daoA, 500, 18, 256)
+	val defaultLocation = LocationA.create("default", daoA, LocationInfo.default)
+	val default2Location = LocationA.create("default2", daoA, LocationInfo.default2)
 
 	def index = Action { implicit req =>
 		val user = getUserFromSession

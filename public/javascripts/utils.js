@@ -1,3 +1,15 @@
+var layer;
+
+var loadMap = function(name, mapData) {
+	game.load.tilemap('map_' + name, null, mapData, Phaser.Tilemap.TILED_JSON);
+	var map = game.add.tilemap('map_' + name);
+	map.addTilesetImage(null, 'tiles', 32, 32, 0, 0, 1);
+	map.setCollisionBetween(1, 25);
+
+	layer = map.createLayer('default');
+	layer.resizeWorld();
+};
+
 var GameObject = function(game, img, x, y) {
 	var animatedSprite = animatedSprites[img];
 	Phaser.Sprite.call(this, game, x, y, animatedSprite.name);
