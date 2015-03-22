@@ -42,12 +42,15 @@ GameStates.MainGame.prototype = {
 				getPlayer().y = msg.move.y;
 			}
 
-			if (msg.say || msg.chat) {
+			if (msg.say) {
+				var owner = msg.isOwner ? player : entities[msg.id];
+				if (owner)
+					Text.showMessage(Text.styleChat, msg.say, owner.x + 4, owner.y - 16, owner);
+			}
+
+			if (msg.chat) {
 				var entry = msg.isOwner ? "<b>" + msg.user + "</b>" : msg.user;
-				if (msg.chat)
-					entry += " chats: " + msg.chat + "<br>";
-				if (msg.say)
-					entry += " says: " + msg.say + "<br>";
+				entry += ": " + msg.chat + "<br>";
 				el("screen").innerHTML += entry;
 			}
 		};

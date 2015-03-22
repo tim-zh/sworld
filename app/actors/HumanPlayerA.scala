@@ -50,7 +50,7 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	override def listen(from: GameEntity, msg: String) {
-		var message = Json.obj("say" -> msg, "user" -> from.name)
+		var message = Json.obj("id" -> from.id, "say" -> msg)
 		if (from.id == entity.id)
 			message = message + ("isOwner" -> JsBoolean(true))
 		out ! message
