@@ -20,6 +20,7 @@ trait Dao {
 										location: String,
 										x: Double,
 										y: Double,
+										radius: Double,
 										viewRadius: Double,
 										voiceRadius: Double,
 										maxSpeed: Double): GameEntity
@@ -32,6 +33,7 @@ trait Dao {
 											 location: String,
 											 x: Double,
 											 y: Double,
+											 radius: Double,
 											 viewRadius: Double,
 											 voiceRadius: Double,
 											 maxSpeed: Double): Boolean
