@@ -2,20 +2,17 @@ package actors
 
 import akka.actor.ActorRef
 import models.{EntityType, GameEntity}
-import utils.{LocationInfo, InfiniteUpdater, RegisteredBot}
+import utils.{LocationInfo, InfiniteUpdater, UpdateeImpl}
 
 class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
-	private val positionUpdater = RegisteredBot(self, entity)
+	private val positionHandler = UpdateeImpl(self, entity)
 	private var isRegistered = false
 
 	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
 		super.locationEntered(newLocation, info, entities)
-		positionUpdater.setup(newLocation, isMoveAllowed, (x: Double, y: Double) => {
-			entity.dx = 0
-			entity.dy = 0
-		})
+		positionHandler.setup(newLocation, isMoveAllowed)
 		if (!isRegistered) {
-			InfiniteUpdater.register(self, positionUpdater)
+			InfiniteUpdater.register(self, positionHandler)
 			isRegistered = true
 		}
 		entities.keys.foreach(e => followIfPlayer(e))
@@ -46,6 +43,6 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 
 	def followIfPlayer(e: GameEntity) {
 		if (e.eType == EntityType.player && Math.hypot(entity.x - e.x, entity.y - e.y) > entity.maxSpeed)
-			positionUpdater.setDestination(e.x, e.y, entity.maxSpeed)
+			positionHandler.setDestination(e.x, e.y, entity.maxSpeed)
 	}
 }

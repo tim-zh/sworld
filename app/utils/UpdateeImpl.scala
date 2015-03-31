@@ -4,21 +4,23 @@ import actors.LocationA
 import akka.actor.ActorRef
 import models.GameEntity
 
-case class RegisteredBot(bot: ActorRef, entity: GameEntity, var positionThreshold: Double = 1) extends Updatee {
+case class UpdateeImpl(bot: ActorRef, entity: GameEntity, var positionThreshold: Double = 1) extends Updatee {
 	var destination: (Double, Double, Double) = null
 	var location: ActorRef = _
 	var moveCheck: (Double, Double, Long) => Boolean = _
 	var moveRejected: (Double, Double) => Unit = _
 	private var stopped = true
 	private var previousPosition: (Double, Double) = _
-	private var timestamp: Long = _
 
-	def setup(location: ActorRef, moveCheck: (Double, Double, Long) => Boolean, moveRejected: (Double, Double) => Unit) {
+	def setup(location: ActorRef, moveCheck: (Double, Double, Long) => Boolean,
+	          moveRejected: (Double, Double) => Unit = (x: Double, y: Double) => {
+		          entity.dx = 0
+		          entity.dy = 0
+	          }) {
 		this.location = location
 		this.moveCheck = moveCheck
 		this.moveRejected = moveRejected
 		previousPosition = (entity.x, entity.y)
-		timestamp = System.currentTimeMillis
 	}
 
 	def setDestination(x: Double, y: Double, radius: Double) {
@@ -28,9 +30,9 @@ case class RegisteredBot(bot: ActorRef, entity: GameEntity, var positionThreshol
 		entity.dy = dy
 	}
 
-	override def update() {
-		val dt = Math.min(System.currentTimeMillis - timestamp, 40)
-		timestamp = System.currentTimeMillis
+	def notifyLocation() = location.tell(LocationA.MoveEntity(entity), bot)
+
+	override def update(dt: Long) {
 		if (entity.dx != 0 || entity.dy != 0) {
 			stopped = false
 			if (destination != null && Math.hypot(entity.x - destination._1, entity.y - destination._2) <= destination._3)
@@ -44,7 +46,7 @@ case class RegisteredBot(bot: ActorRef, entity: GameEntity, var positionThreshol
 					if (Math.abs(previousPosition._1 - entity.x) >= positionThreshold ||
 							Math.abs(previousPosition._2 - entity.y) >= positionThreshold) {
 						previousPosition = (entity.x, entity.y)
-						location.tell(LocationA.MoveEntity(entity), bot)
+						notifyLocation()
 					}
 				} else
 					moveRejected(entity.x, entity.y)
@@ -58,6 +60,6 @@ case class RegisteredBot(bot: ActorRef, entity: GameEntity, var positionThreshol
 		entity.dx = 0
 		entity.dy = 0
 		destination = null
-		location.tell(LocationA.MoveEntity(entity), bot)
+		notifyLocation()
 	}
 }
