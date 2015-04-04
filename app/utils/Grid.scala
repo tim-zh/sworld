@@ -10,15 +10,17 @@ import scala.collection.mutable
  * @param height vertical number of cells
  * @param cellSize length of cell's side
  */
-class Grid(width: Int, height: Int, cellSize: Int) {
-	private val entitiesGridMap = mutable.Map[GameEntity, mutable.Set[GameEntity]]()
+abstract class Grid(width: Int, height: Int, cellSize: Int) {
 
- 	private val grid: Array[Array[mutable.Set[GameEntity]]] =
+	protected class Cell extends mutable.HashSet[GameEntity]
+
+	private val entitiesMap = mutable.Map[GameEntity, mutable.Set[Cell]]()
+ 	private val grid: Array[Array[Cell]] =
  		for (i <- Array.range(0, width))
  			yield for (j <- Array.range(0, height))
- 				yield mutable.Set[GameEntity]()
+ 				yield new Cell()
 
-	private def getCell(x: Double, y: Double): Option[mutable.Set[GameEntity]] = {
+	protected def getCell(x: Double, y: Double): Option[Cell] = {
  		val i = (x / cellSize).toInt
  		val j = (y / cellSize).toInt
  		if (i >= 0 && j >= 0 && i < width && j < height)
@@ -27,7 +29,7 @@ class Grid(width: Int, height: Int, cellSize: Int) {
  			None
  	}
 
-	private def getCells(centerX: Double, centerY: Double, radius: Double): IndexedSeq[mutable.Set[GameEntity]] = {
+	protected def getCells(centerX: Double, centerY: Double, radius: Double): Seq[Cell] = {
 		val minX = math.max(((centerX - radius) / cellSize).toInt, 0)
 		val maxX = math.min(((centerX + radius) / cellSize).toInt, width)
 		val minY = math.max(((centerY - radius) / cellSize).toInt, 0)
@@ -39,25 +41,37 @@ class Grid(width: Int, height: Int, cellSize: Int) {
 		cellsSeq
 	}
 
-	def update(entity: GameEntity, isLeaving: Boolean = false) {
-		if (isLeaving) {
-			entitiesGridMap.get(entity) foreach { _ -= entity }
-			entitiesGridMap -= entity
-			return
-		}
-		val oldCell = entitiesGridMap.get(entity)
-		val newCell = getCell(entity.x, entity.y)
-		if (newCell.isDefined) {
-			if (oldCell.isDefined) {
-				if (newCell.get == oldCell.get)
-					return
-				oldCell.get -= entity
-			}
-			newCell.get += entity
-			entitiesGridMap.put(entity, newCell.get)
-		}
- 	}
+	protected def getCellsFor(entity: GameEntity): Seq[Cell]
 
-	def getEntities(x: Double, y: Double, radius: Double): IndexedSeq[GameEntity] =
+	def add(entity: GameEntity) =
+		getCellsFor(entity).map(cell => {
+			if (entitiesMap.contains(entity))
+				entitiesMap(entity) += cell
+			else
+				entitiesMap.put(entity, mutable.Set(cell))
+			cell += entity
+		}).nonEmpty
+
+	def update(entity: GameEntity) = {
+		remove(entity)
+		add(entity)
+	}
+
+	def remove(entity: GameEntity) {
+		entitiesMap.get(entity) foreach (_.foreach(_  -= entity))
+		entitiesMap -= entity
+	}
+
+	def getEntities(x: Double, y: Double, radius: Double): Seq[GameEntity] =
 		getCells(x, y, radius).flatten
+}
+
+class SimpleGrid(width: Int, height: Int, cellSize: Int) extends Grid(width, height, cellSize) {
+	override protected def getCellsFor(entity: GameEntity): Seq[Cell] =
+		getCell(entity.x, entity.y).map(Seq(_)).getOrElse(Seq.empty[Cell])
+}
+
+class CollisionGrid(width: Int, height: Int, cellSize: Int) extends Grid(width, height, cellSize) {
+	override protected def getCellsFor(entity: GameEntity): Seq[Cell] =
+		getCells(entity.x, entity.y, entity.radius)
 }

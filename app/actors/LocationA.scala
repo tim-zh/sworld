@@ -3,7 +3,7 @@ package actors
 import akka.actor._
 import models.GameEntity
 import play.libs.Akka
-import utils.{LocationInfo, Grid}
+import utils.{CollisionGrid, LocationInfo, SimpleGrid}
 
 object LocationA {
 
@@ -34,31 +34,25 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
 
 	private var actorsMap = Map[ActorRef, GameEntity]()
 	private var entitiesMap = Map[GameEntity, ActorRef]()
-	private val grid = new Grid(info.width, info.height, info.cellSize)
+	private val grid = new SimpleGrid(info.width, info.height, info.cellSize)
+	private val collisionGrid = new CollisionGrid(info.width, info.height, info.cellSize)
 
 	def receive = {
 		case Enter(entity) =>
 			actorsMap += (sender -> entity)
 			entitiesMap += (entity -> sender)
-			grid.update(entity)
+			grid.add(entity)
+			collisionGrid.add(entity)
 			entity.location = self.path.name
 			context watch sender
 			sender ! GameEntityA.LocationEntered(info, filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
 			notifyEntitiesAbout(entity)
 
 		case Leave if actorsMap contains sender =>
-			val entity = actorsMap(sender)
-			grid.update(entity, true)
-			entitiesMap -= entity
-			actorsMap -= sender
-			notifyEntitiesAboutDeletionOf(entity)
+			leave(sender)
 
 		case Terminated(actor) if actorsMap contains actor =>
-			val entity = actorsMap(actor)
-			grid.update(entity, true)
-			entitiesMap -= entity
-			actorsMap -= actor
-			notifyEntitiesAboutDeletionOf(entity)
+			leave(actor)
 
 		case Notify(to, msg) =>
 			entitiesMap.get(to) foreach { _ forward msg }
@@ -85,10 +79,20 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
 			entity.dx = dx
 			entity.dy = dy
 			grid.update(entity)
+			collisionGrid.update(entity)
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
 			notifyEntitiesAbout(entity)
 			sender ! LookupEntitiesResult(filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
+	}
+
+	def leave(actor: ActorRef) {
+		val entity = actorsMap(actor)
+		grid.remove(entity)
+		collisionGrid.remove(entity)
+		entitiesMap -= entity
+		actorsMap -= actor
+		notifyEntitiesAboutDeletionOf(entity)
 	}
 
 	def filterNearbyEntities(x: Double, y: Double, radius: Double): Map[GameEntity, ActorRef] =
