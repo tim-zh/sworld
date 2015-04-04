@@ -3,7 +3,7 @@ package actors
 import akka.actor._
 import models.GameEntity
 import play.libs.Akka
-import utils.{Updatee, CollisionGrid, LocationInfo, SimpleGrid}
+import utils._
 
 object LocationA {
 
@@ -17,10 +17,11 @@ object LocationA {
 	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
 
 	object MoveEntity {
-		def apply(entity: GameEntity): MoveEntity = this(entity.x, entity.y, entity.dx, entity.dy)
+		def apply(entity: GameEntity): MoveEntity = apply(entity, true)
+		def apply(entity: GameEntity, notifyEntities: Boolean): MoveEntity = this(entity.x, entity.y, entity.dx, entity.dy, notifyEntities)
 	}
 
-	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0)
+	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0, notifyEntities: Boolean)
 
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
@@ -37,6 +38,10 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 	private var movedEntities = Set[GameEntity]()
 	private val grid = new SimpleGrid(info.width, info.height, info.cellSize)
 	private val collisionGrid = new CollisionGrid(info.width, info.height, info.cellSize)
+
+	override def preStart() {
+		InfiniteUpdater.register(self, this)
+	}
 
 	def receive = {
 		case Enter(entity) =>
@@ -73,7 +78,7 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			val entity = actorsMap(sender)
 			filterNearbyEntities(entity.x, entity.y, radius) foreach { entitiesMap(_) ! GameEntityA.Listen(entity.copy(), msg) }
 
-		case MoveEntity(x, y, dx, dy) if actorsMap contains sender =>
+		case MoveEntity(x, y, dx, dy, notifyEntities) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
 			entity.x = x
 			entity.y = y
@@ -84,7 +89,8 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			movedEntities += entity
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
-			notifyEntitiesAbout(entity)
+			if (notifyEntities)
+				notifyEntitiesAbout(entity)
 			sender ! LookupEntitiesResult(filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
 	}
 
