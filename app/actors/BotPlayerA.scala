@@ -8,14 +8,14 @@ class BotPlayerA(initialLocation: ActorRef, entity: GameEntity) extends GameEnti
 	private val positionHandler = UpdateeImpl(self, entity)
 	private var isRegistered = false
 
-	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
+	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Set[GameEntity]) {
 		super.locationEntered(newLocation, info, entities)
 		positionHandler.setup(newLocation, isMoveAllowed)
 		if (!isRegistered) {
 			InfiniteUpdater.register(self, positionHandler)
 			isRegistered = true
 		}
-		entities.keys.foreach(e => followIfPlayer(e))
+		entities.foreach(e => followIfPlayer(e))
 	}
 
 	override def listenChat(from: GameEntity, msg: String) {

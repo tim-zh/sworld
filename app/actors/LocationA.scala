@@ -11,7 +11,7 @@ object LocationA {
 	object Leave
 
 	case class LookupEntities(x: Double, y: Double, radius: Double)
-	case class LookupEntitiesResult(entities: Map[GameEntity, ActorRef])
+	case class LookupEntitiesResult(entities: Set[GameEntity])
 
 	case class Notify[+T](to: GameEntity, msg: T)
 	case class NotifyArea[+T](x: Double, y: Double, radius: Double, msg: T)
@@ -59,7 +59,7 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			entitiesMap.get(to) foreach { _ forward msg }
 
 		case NotifyArea(x, y, radius, msg) =>
-			filterNearbyEntities(x, y, radius) foreach { _._2 forward msg }
+			filterNearbyEntities(x, y, radius) foreach { entitiesMap(_) forward msg }
 
 		case LookupEntities(x, y, radius) =>
 			val filtered = filterNearbyEntities(x, y, radius)
@@ -71,7 +71,7 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 
 		case Broadcast(msg, radius) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
-			filterNearbyEntities(entity.x, entity.y, radius) foreach { _._2 ! GameEntityA.Listen(entity.copy(), msg) }
+			filterNearbyEntities(entity.x, entity.y, radius) foreach { entitiesMap(_) ! GameEntityA.Listen(entity.copy(), msg) }
 
 		case MoveEntity(x, y, dx, dy) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
@@ -97,36 +97,36 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 		notifyEntitiesAboutDeletionOf(entity)
 	}
 
-	def filterNearbyEntities(x: Double, y: Double, radius: Double): Map[GameEntity, ActorRef] =
- 		if (radius == -1)
-			entitiesMap.map(e => (e._1.copy(), e._2))
- 		else {
+	def filterNearbyEntities(x: Double, y: Double, radius: Double): Set[GameEntity] =
+		getEntitiesCopy(if (radius == -1)
+			entitiesMap.keys.toSet
+		else {
 			val entities = grid.getEntities(x, y, radius)
-			getEntitiesMap(entities.view.filter(e => Math.hypot(x - e.x, y - e.y) <= radius))
-		}
+			entities.filter(e => Math.hypot(x - e.x, y - e.y) <= radius)
+		})
 
 	def notifyEntitiesAbout(entity: GameEntity) {
-		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { entry =>
-			if (entry._1.id != entity.id)
-				entry._2 ! GameEntityA.NotifyEntityUpdate(entity)
+		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { e =>
+			if (e.id != entity.id)
+				entitiesMap(e) ! GameEntityA.NotifyEntityUpdate(entity)
 		}
 	}
 
 	def notifyEntitiesAboutDeletionOf(entity: GameEntity) {
-		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { entry =>
-			if (entry._1.id != entity.id)
-				entry._2 ! GameEntityA.NotifyEntityDeletion(entity)
+		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { e =>
+			if (e.id != entity.id)
+				entitiesMap(e) ! GameEntityA.NotifyEntityDeletion(entity)
 		}
 	}
 
 	override def update(dt: Long) {
 		movedEntities.foreach(entity => {
 			val collisions = collisionGrid.getCollisionsFor(entity)
-			entitiesMap(entity) ! GameEntityA.Collision(getEntitiesMap(collisions))
-			collisions.foreach(e => entitiesMap(e) ! GameEntityA.Collision(getEntitiesMap(Seq(entity))))
+			entitiesMap(entity) ! GameEntityA.Collision(getEntitiesCopy(collisions))
+			collisions.foreach(e => entitiesMap(e) ! GameEntityA.Collision(getEntitiesCopy(Set(entity))))
 		})
 		movedEntities = Set[GameEntity]()
 	}
 
-	def getEntitiesMap(entities: Iterable[GameEntity]) = entities.map(e => (e.copy(), entitiesMap(e))).toMap
+	def getEntitiesCopy(entities: Set[GameEntity]) = entities.map(e => e.copy())
 }

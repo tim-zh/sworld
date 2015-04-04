@@ -9,16 +9,16 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 
 	var lastMoveTimestamp = 0L
 
-	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
+	override def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Set[GameEntity]) {
 		super.locationEntered(newLocation, info, entities)
 		import LocationInfo.locationInfoWrites
 		out ! Json.obj(
 			"location" -> Json.toJson(info),
 			"move" -> Json.obj("x" -> entity.x, "y" -> entity.y),
-			"eNew" -> Json.toJson(entities.keys map { e =>
+			"eNew" -> Json.toJson(entities map { e =>
 				Json.obj("id" -> e.id, "x" -> Math.floor(e.x), "y" -> Math.floor(e.y), "type" -> e.eType.name)
 			}),
-			"eGone" -> Json.toJson(visibleEntitiesMap.keys map { e =>
+			"eGone" -> Json.toJson(visibleEntities map { e =>
 				Json.obj("id" -> e.id)
 			})
 		)

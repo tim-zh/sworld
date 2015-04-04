@@ -7,7 +7,7 @@ import utils.{LocationInfo, Utils}
 
 object GameEntityA {
 
-	case class LocationEntered(info: LocationInfo, entities: Map[GameEntity, ActorRef])
+	case class LocationEntered(info: LocationInfo, entities: Set[GameEntity])
 
 	case class Listen(from: GameEntity, msg: String)
 	case class ListenChat(from: GameEntity, msg: String)
@@ -15,7 +15,7 @@ object GameEntityA {
 	case class NotifyEntityUpdate(entities: GameEntity)
 	case class NotifyEntityDeletion(entity: GameEntity)
 
-	case class Collision(entities: Map[GameEntity, ActorRef])
+	case class Collision(entities: Set[GameEntity])
 
 	private var lastTransientId: Long = -1
 
@@ -26,7 +26,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 	import actors.GameEntityA._
 
 	protected var currentLocationInfo: LocationInfo = _
-	protected var visibleEntitiesMap = Map[GameEntity, ActorRef]()
+	protected var visibleEntities = Set[GameEntity]()
 
 	override def preStart() {
 		location ! LocationA.Enter(entity.copy())
@@ -34,42 +34,42 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	override def receive = {
 		case LocationEntered(info, entities) =>
-			currentLocationInfo = info
-			val newEntities = entities filter (_._1.id != entity.id)
+			val newEntities = entities filter (_.id != entity.id)
 			locationEntered(sender, info, newEntities)
-			visibleEntitiesMap = newEntities
+			currentLocationInfo = info
+			visibleEntities = newEntities
 
 		case NotifyEntityUpdate(e) =>
 			if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius) {
-				if (visibleEntitiesMap contains e)
+				if (visibleEntities contains e)
 					notifyUpdatedEntity(e)
 				else {
-					visibleEntitiesMap += (e -> sender)
+					visibleEntities += e
 					notifyNewEntity(e)
 				}
-			} else if (visibleEntitiesMap contains e) {
-				visibleEntitiesMap -= e
+			} else if (visibleEntities contains e) {
+				visibleEntities -= e
 				notifyGoneEntity(e)
 			}
 
 		case NotifyEntityDeletion(e) =>
-			if (visibleEntitiesMap contains e) {
-				visibleEntitiesMap -= e
+			if (visibleEntities contains e) {
+				visibleEntities -= e
 				notifyGoneEntity(e)
 			}
 
 		case Collision(entities) =>
-			entities.keys.foreach(collideWithEntity)
+			entities.foreach(collideWithEntity)
 
 		case LocationA.LookupEntitiesResult(entities) =>
-			entities.keys.filter(_.id != entity.id) foreach { e =>
-				if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius && !visibleEntitiesMap.contains(e)) {
-					visibleEntitiesMap += (e -> sender)
+			entities.filter(_.id != entity.id) foreach { e =>
+				if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius && !visibleEntities.contains(e)) {
+					visibleEntities += e
 					notifyNewEntity(e)
 				}
 			}
-			visibleEntitiesMap.keys.filter(e => !entities.contains(e)) foreach { e =>
-				visibleEntitiesMap -= e
+			visibleEntities.filter(e => !entities.contains(e)) foreach { e =>
+				visibleEntities -= e
 				notifyGoneEntity(e)
 			}
 
@@ -83,7 +83,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 			handleMessage(msg)
 	}
 
-	def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Map[GameEntity, ActorRef]) {
+	def locationEntered(newLocation: ActorRef, info: LocationInfo, entities: Set[GameEntity]) {
 		if (location != newLocation)
 			location ! LocationA.Leave
 		location = newLocation
