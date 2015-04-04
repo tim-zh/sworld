@@ -3,7 +3,7 @@ package actors
 import akka.actor._
 import models.GameEntity
 import play.libs.Akka
-import utils.{CollisionGrid, LocationInfo, SimpleGrid}
+import utils.{Updatee, CollisionGrid, LocationInfo, SimpleGrid}
 
 object LocationA {
 
@@ -29,11 +29,12 @@ object LocationA {
 		Akka.system().actorOf(Props(classOf[LocationA], dao, info), name)
 }
 
-class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
+class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with Updatee {
 	import actors.LocationA._
 
 	private var actorsMap = Map[ActorRef, GameEntity]()
 	private var entitiesMap = Map[GameEntity, ActorRef]()
+	private var movedEntities = Set[GameEntity]()
 	private val grid = new SimpleGrid(info.width, info.height, info.cellSize)
 	private val collisionGrid = new CollisionGrid(info.width, info.height, info.cellSize)
 
@@ -80,6 +81,7 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
 			entity.dy = dy
 			grid.update(entity)
 			collisionGrid.update(entity)
+			movedEntities += entity
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
 			notifyEntitiesAbout(entity)
@@ -99,9 +101,8 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
  		if (radius == -1)
 			entitiesMap.map(e => (e._1.copy(), e._2))
  		else {
-			val entitiesSeq = grid.getEntities(x, y, radius)
-			entitiesSeq.view.filter(e => Math.hypot(x - e.x, y - e.y) <= radius).
-					map(e => (e.copy(), entitiesMap(e))).toMap
+			val entities = grid.getEntities(x, y, radius)
+			getEntitiesMap(entities.view.filter(e => Math.hypot(x - e.x, y - e.y) <= radius))
 		}
 
 	def notifyEntitiesAbout(entity: GameEntity) {
@@ -117,4 +118,15 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA {
 				entry._2 ! GameEntityA.NotifyEntityDeletion(entity)
 		}
 	}
+
+	override def update(dt: Long) {
+		movedEntities.foreach(entity => {
+			val collisions = collisionGrid.getCollisionsFor(entity)
+			entitiesMap(entity) ! GameEntityA.Collision(getEntitiesMap(collisions))
+			collisions.foreach(e => entitiesMap(e) ! GameEntityA.Collision(getEntitiesMap(Seq(entity))))
+		})
+		movedEntities = Set[GameEntity]()
+	}
+
+	def getEntitiesMap(entities: Iterable[GameEntity]) = entities.map(e => (e.copy(), entitiesMap(e))).toMap
 }

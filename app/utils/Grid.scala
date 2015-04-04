@@ -29,7 +29,7 @@ abstract class Grid(width: Int, height: Int, cellSize: Int) {
  			None
  	}
 
-	protected def getCells(centerX: Double, centerY: Double, radius: Double): Seq[Cell] = {
+	protected def getCells(centerX: Double, centerY: Double, radius: Double): Set[Cell] = {
 		val minX = math.max(((centerX - radius) / cellSize).toInt, 0)
 		val maxX = math.min(((centerX + radius) / cellSize).toInt, width)
 		val minY = math.max(((centerY - radius) / cellSize).toInt, 0)
@@ -38,10 +38,10 @@ abstract class Grid(width: Int, height: Int, cellSize: Int) {
 			x <- minX to maxX
 			y <- minY to maxY
 		} yield grid(x)(y)
-		cellsSeq
+		cellsSeq.toSet
 	}
 
-	protected def getCellsFor(entity: GameEntity): Seq[Cell]
+	protected def getCellsFor(entity: GameEntity): Set[Cell]
 
 	def add(entity: GameEntity) =
 		getCellsFor(entity).map(cell => {
@@ -58,20 +58,28 @@ abstract class Grid(width: Int, height: Int, cellSize: Int) {
 	}
 
 	def remove(entity: GameEntity) {
-		entitiesMap.get(entity) foreach (_.foreach(_  -= entity))
+		entitiesMap.get(entity) foreach (_.foreach(_ -= entity))
 		entitiesMap -= entity
 	}
 
-	def getEntities(x: Double, y: Double, radius: Double): Seq[GameEntity] =
+	def getEntities(x: Double, y: Double, radius: Double): Set[GameEntity] =
 		getCells(x, y, radius).flatten
 }
 
 class SimpleGrid(width: Int, height: Int, cellSize: Int) extends Grid(width, height, cellSize) {
-	override protected def getCellsFor(entity: GameEntity): Seq[Cell] =
-		getCell(entity.x, entity.y).map(Seq(_)).getOrElse(Seq.empty[Cell])
+	override protected def getCellsFor(entity: GameEntity): Set[Cell] =
+		getCell(entity.x, entity.y).map(Set(_)).getOrElse(Set.empty[Cell])
 }
 
 class CollisionGrid(width: Int, height: Int, cellSize: Int) extends Grid(width, height, cellSize) {
-	override protected def getCellsFor(entity: GameEntity): Seq[Cell] =
+	override protected def getCellsFor(entity: GameEntity): Set[Cell] =
 		getCells(entity.x, entity.y, entity.radius)
+
+	def getCollisionsFor(entity: GameEntity) =
+		getCells(entity.x, entity.y, entity.radius).
+				map(
+					_.filter(cellEntity =>
+						Math.hypot(entity.x - cellEntity.x, entity.y - cellEntity.y) <= entity.radius + cellEntity.radius
+					)
+				).flatten
 }

@@ -15,6 +15,8 @@ object GameEntityA {
 	case class NotifyEntityUpdate(entities: GameEntity)
 	case class NotifyEntityDeletion(entity: GameEntity)
 
+	case class Collision(entities: Map[GameEntity, ActorRef])
+
 	private var lastTransientId: Long = -1
 
 	def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
@@ -56,6 +58,9 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 				notifyGoneEntity(e)
 			}
 
+		case Collision(entities) =>
+			entities.keys.foreach(collideWithEntity)
+
 		case LocationA.LookupEntitiesResult(entities) =>
 			entities.keys.filter(_.id != entity.id) foreach { e =>
 				if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius && !visibleEntitiesMap.contains(e)) {
@@ -90,6 +95,8 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 	def notifyNewEntity(e: GameEntity) {}
 
 	def notifyGoneEntity(e: GameEntity) {}
+
+	def collideWithEntity(e: GameEntity) {}
 
 	def listenChat(from: GameEntity, msg: String) {}
 
