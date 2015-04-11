@@ -3,7 +3,7 @@ package actors
 import akka.actor._
 import models.{EntityType, GameEntity}
 import play.api.libs.json.{JsBoolean, JsObject, Json}
-import utils.LocationInfo
+import utils.{Utils, LocationInfo}
 
 class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity) extends GameEntityA(initialLocation, entity) {
 
@@ -85,8 +85,17 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 				say(msg)
 				if (msg == "rise")
 					createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.bot, "bot", entity.location, entity.x + 30, entity.y + 30, 8, 100, 100, 15))
-				if (msg == "fire")
-					createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.grenade, "grenade", entity.location, entity.x, entity.y, 8, 100, 100, 15, 15, 0))
 			}
+
+			if (jsObj.value contains "mouseDown") {
+				val x = (jsObj \ "mouseDown" \ "x").as[Int]
+				val y = (jsObj \ "mouseDown" \ "y").as[Int]
+				mouseDown(x, y)
+			}
+	}
+
+	def mouseDown(x: Int, y: Int) {
+		val (dx, dy) = Utils.getVelocityVectorTo(entity, x, y)
+		createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.grenade, "grenade", entity.location, entity.x, entity.y, 8, 100, 100, 15, dx, dy))
 	}
 }

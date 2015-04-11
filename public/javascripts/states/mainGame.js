@@ -58,6 +58,10 @@ GameStates.MainGame.prototype = {
 		});
 
 		getPlayer(0, 0);
+
+		game.canvas.addEventListener('mousedown', function() {
+			sendMessage({ mouseDown: { x: game.input.x, y: game.input.y } });
+		});
 	},
 
 	update: function() {
