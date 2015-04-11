@@ -76,10 +76,10 @@ class CollisionGrid(width: Int, height: Int, cellSize: Int) extends Grid(width, 
 		getCells(entity.x, entity.y, entity.radius)
 
 	def getCollisionsFor(entity: GameEntity) =
-		getCells(entity.x, entity.y, entity.radius).
-				map(
-					_.filter(cellEntity =>
-						Math.hypot(entity.x - cellEntity.x, entity.y - cellEntity.y) <= entity.radius + cellEntity.radius
-					)
-				).flatten
+		getCells(entity.x, entity.y, entity.radius).flatten.filter(cellEntity =>
+			entity.id != cellEntity.id &&
+			Math.abs(entity.x - cellEntity.x) <= entity.radius + cellEntity.radius &&
+			Math.abs(entity.y - cellEntity.y) <= entity.radius + cellEntity.radius &&
+			Math.hypot(entity.x - cellEntity.x, entity.y - cellEntity.y) <= entity.radius + cellEntity.radius
+		)
 }

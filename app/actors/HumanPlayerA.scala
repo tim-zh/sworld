@@ -85,6 +85,8 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 				say(msg)
 				if (msg == "rise")
 					createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.bot, "bot", entity.location, entity.x + 30, entity.y + 30, 8, 100, 100, 15))
+				if (msg == "fire")
+					createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.grenade, "grenade", entity.location, entity.x, entity.y, 8, 100, 100, 15, 15, 0))
 			}
 	}
 }

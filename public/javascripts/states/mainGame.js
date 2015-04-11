@@ -7,7 +7,7 @@ GameStates.MainGame.prototype = {
 
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 
-		var receive = function(message) {
+		connect('socket', function(message) {
 			var msg = JSON.parse(message.data);
 
 			if (msg.location) {
@@ -27,6 +27,8 @@ GameStates.MainGame.prototype = {
 			if (msg.eNew) {
 				msg.eNew.forEach(function(e) {
 					entities[e.id] = new GameObject(game, e.type, e.x, e.y);
+					entities[e.id].body.velocity.set(e.dx, e.dy);
+					updateAnimation(entities[e.id], e.dx, e.dy);
 				});
 			}
 
@@ -53,10 +55,9 @@ GameStates.MainGame.prototype = {
 				entry += ": " + msg.chat + "<br>";
 				el("screen").innerHTML += entry;
 			}
-		};
+		});
 
 		getPlayer(0, 0);
-		connect('socket', receive);
 	},
 
 	update: function() {

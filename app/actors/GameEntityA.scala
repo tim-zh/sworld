@@ -34,10 +34,9 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 
 	override def receive = {
 		case LocationEntered(info, entities) =>
-			val newEntities = entities filter (_.id != entity.id)
-			locationEntered(sender, info, newEntities)
+			locationEntered(sender, info, entities)
 			currentLocationInfo = info
-			visibleEntities = newEntities
+			visibleEntities = entities
 
 		case NotifyEntityUpdate(e) =>
 			if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius) {
@@ -62,7 +61,7 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 			entities.foreach(collideWithEntity)
 
 		case LocationA.LookupEntitiesResult(entities) =>
-			entities.filter(_.id != entity.id) foreach { e =>
+			entities foreach { e =>
 				if (Math.hypot(e.x - entity.x, e.y - entity.y) <= entity.viewRadius && !visibleEntities.contains(e)) {
 					visibleEntities += e
 					notifyNewEntity(e)
@@ -125,6 +124,10 @@ abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends R
 	def createGameEntity(e: GameEntity) = e.eType match {
 		case EntityType.bot =>
 			Akka.system().actorOf(Props(classOf[BotPlayerA], location, e))
+		case EntityType.grenade =>
+			Akka.system().actorOf(Props(classOf[GrenadeA], location, e))
+		case _ =>
+			throw new IllegalStateException()
 	}
 
 	def isMoveAllowed(x: Double, y: Double, dtInMillis: Long) =

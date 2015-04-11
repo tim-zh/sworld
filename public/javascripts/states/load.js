@@ -17,6 +17,10 @@ GameStates.Load.prototype = {
 			{ name: 'down_walk', frames: [0, 1, 2, 1], frameRate: 6, loop: true },
 			{ name: 'side_walk', frames: [6, 7, 8, 7], frameRate: 6, loop: true }],
 			directionUp: 'up_walk', directionDown: 'down_walk', directionSide: 'side_walk' };
+		game.load.spritesheet('grenade', 'assets/images/sprites/grenade.png', 16, 16);
+		animatedSprites['grenade'] = { name: 'grenade', animations: [
+			{ name: 'idle', frames: [0, 1], frameRate: 6, loop: true }],
+			directionUp: 'idle', directionDown: 'idle', directionSide: 'idle' };
 	},
 
 	create: function() {

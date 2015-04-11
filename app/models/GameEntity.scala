@@ -12,7 +12,7 @@ case class GameEntity(id: Long,
 											var y: Double,
 											var radius: Double,
 											viewRadius: Double,
-											voiceRadius: Double = 0,
+											voiceRadius: Double,
 											maxSpeed: Double,
 											var dx: Double = 0,
 											var dy: Double = 0) {

@@ -38,15 +38,15 @@ GameObject.prototype.addMouseOver = function(f) { this.events.onInputOver.add(f,
 GameObject.prototype.removeMouseDown = function(f) { this.events.onInputDown.remove(f, this); };
 GameObject.prototype.removeMouseOver = function(f) { this.events.onInputOver.remove(f, this); };
 
-var stopAnimation = function(object) {
-	object.animations.stop();
-	object.frame = 0;
-	object.direction = null;
-};
-
 var updateAnimation = function(object, dx, dy) {
 	if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
-		stopAnimation(object);
+		if (object.animations.getAnimation('idle')) {
+			if (object.animations.currentAnim.name != 'idle' || ! object.animations.currentAnim.isPlaying)
+				object.animations.play('idle');
+		} else {
+			object.animations.stop();
+			object.frame = 0;
+		}
 		return;
 	}
 
@@ -60,10 +60,8 @@ var updateAnimation = function(object, dx, dy) {
 		direction = object.directionSide;
 		object.scale.x = dx < 0 ? -1 : 1;
 	}
-	if (object.direction != direction) {
-		object.direction = direction;
+	if (object.animations.currentAnim.name != direction || ! object.animations.currentAnim.isPlaying)
 		object.animations.play(direction);
-	}
 };
 
 var keys;

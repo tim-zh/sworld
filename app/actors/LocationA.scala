@@ -18,10 +18,11 @@ object LocationA {
 
 	object MoveEntity {
 		def apply(entity: GameEntity): MoveEntity = apply(entity, true)
-		def apply(entity: GameEntity, notifyEntities: Boolean): MoveEntity = this(entity.x, entity.y, entity.dx, entity.dy, notifyEntities)
+		def apply(entity: GameEntity, updateVisibleEntities: Boolean): MoveEntity =
+			this(entity.x, entity.y, entity.dx, entity.dy, updateVisibleEntities)
 	}
 
-	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0, notifyEntities: Boolean)
+	case class MoveEntity(x: Double, y: Double, dx: Double = 0, dy: Double = 0, updateVisibleEntities: Boolean)
 
 	case class Broadcast(msg: String, radius: Double)
 	case class BroadcastChat(msg: String)
@@ -51,7 +52,7 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			collisionGrid.add(entity)
 			entity.location = self.path.name
 			context watch sender
-			sender ! GameEntityA.LocationEntered(info, filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
+			sender ! GameEntityA.LocationEntered(info, filterVisibleEntitiesFor(entity))
 			notifyEntitiesAbout(entity)
 
 		case Leave if actorsMap contains sender =>
@@ -78,7 +79,7 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			val entity = actorsMap(sender)
 			filterNearbyEntities(entity.x, entity.y, radius) foreach { entitiesMap(_) ! GameEntityA.Listen(entity.copy(), msg) }
 
-		case MoveEntity(x, y, dx, dy, notifyEntities) if actorsMap contains sender =>
+		case MoveEntity(x, y, dx, dy, updateVisibleEntities) if actorsMap contains sender =>
 			val entity = actorsMap(sender)
 			entity.x = x
 			entity.y = y
@@ -89,9 +90,12 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			movedEntities += entity
 			if (!entity.transient)
 				dao ! DaoA.UpdateEntity(entity.copy())
-			if (notifyEntities)
-				notifyEntitiesAbout(entity)
-			sender ! LookupEntitiesResult(filterNearbyEntities(entity.x, entity.y, entity.viewRadius))
+			notifyEntitiesAbout(entity)
+			if (updateVisibleEntities) {
+				val entities = filterVisibleEntitiesFor(entity)
+				if (entities.nonEmpty)
+					sender ! LookupEntitiesResult(entities)
+			}
 	}
 
 	def leave(actor: ActorRef) {
@@ -110,6 +114,9 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 			val entities = grid.getEntities(x, y, radius)
 			entities.filter(e => Math.hypot(x - e.x, y - e.y) <= radius)
 		})
+
+	def filterVisibleEntitiesFor(entity: GameEntity) =
+		filterNearbyEntities(entity.x, entity.y, entity.viewRadius) filter (_.id != entity.id)
 
 	def notifyEntitiesAbout(entity: GameEntity) {
 		filterNearbyEntities(entity.x, entity.y, maxViewRadius) foreach { e =>
