@@ -31,9 +31,9 @@ abstract class Grid(width: Int, height: Int, cellSize: Int) {
 
 	protected def getCells(centerX: Double, centerY: Double, radius: Double): Set[Cell] = {
 		val minX = math.max(((centerX - radius) / cellSize).toInt, 0)
-		val maxX = math.min(((centerX + radius) / cellSize).toInt, width)
+		val maxX = math.min(((centerX + radius) / cellSize).toInt, width - 1)
 		val minY = math.max(((centerY - radius) / cellSize).toInt, 0)
-		val maxY = math.min(((centerY + radius) / cellSize).toInt, height)
+		val maxY = math.min(((centerY + radius) / cellSize).toInt, height - 1)
 		val cellsSeq = for {
 			x <- minX to maxX
 			y <- minY to maxY

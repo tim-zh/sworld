@@ -95,7 +95,14 @@ class HumanPlayerA(out: ActorRef, initialLocation: ActorRef, entity: GameEntity)
 	}
 
 	def mouseDown(x: Int, y: Int) {
-		val (dx, dy) = Utils.getVelocityVectorTo(entity, x, y)
-		createGameEntity(GameEntity(GameEntityA.generateId(), true, EntityType.grenade, "grenade", entity.location, entity.x, entity.y, 8, 100, 100, 15, dx, dy))
+		val grenade = GameEntity(GameEntityA.generateId(), true, EntityType.grenade, "grenade", entity.location, entity.x, entity.y, 8, 100, 100, 15, 0, 0)
+		val (dx, dy) = Utils.getVelocityVectorTo(grenade, x, y)
+		grenade.dx = dx
+		grenade.dy = dy
+
+		val (px, py) = Utils.getVector(grenade.x, grenade.y, x, y, entity.radius + grenade.radius)
+		grenade.x += px
+		grenade.y += py
+		createGameEntity(grenade)
 	}
 }

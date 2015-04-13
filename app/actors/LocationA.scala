@@ -102,6 +102,8 @@ class LocationA(dao: ActorRef, info: LocationInfo) extends ReceiveLoggerA with U
 		val entity = actorsMap(actor)
 		grid.remove(entity)
 		collisionGrid.remove(entity)
+		InfiniteUpdater.remove(actor)
+		movedEntities -= entity
 		entitiesMap -= entity
 		actorsMap -= actor
 		notifyEntitiesAboutDeletionOf(entity)

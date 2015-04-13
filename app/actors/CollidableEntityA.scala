@@ -18,11 +18,5 @@ class CollidableEntityA(initialLocation: ActorRef, entity: GameEntity) extends G
 		InfiniteUpdater.register(self, positionHandler)
 	}
 
-	def collideWithWall() {
-		location ! LocationA.MoveEntity(entity, false)
-	}
-
-	override def collideWithEntity(e: GameEntity) {
-		location ! LocationA.MoveEntity(entity, false)
-	}
+	def collideWithWall() {}
 }
