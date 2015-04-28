@@ -1,5 +1,7 @@
 package actors
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import akka.actor.{Props, ActorRef}
 import models.{EntityType, GameEntity}
 import play.libs.Akka
@@ -17,9 +19,9 @@ object GameEntityA {
 
 	case class Collision(entities: Set[GameEntity])
 
-	private var lastTransientId: Long = -1
+	private val lastTransientId = new AtomicInteger()
 
-	def generateId() = synchronized { lastTransientId -= 1; lastTransientId }
+	def generateId() = lastTransientId.decrementAndGet()
 }
 
 abstract class GameEntityA(var location: ActorRef, entity: GameEntity) extends ReceiveLoggerA {
